@@ -446,12 +446,16 @@ class GridWorld:
     # ─── Simulation Step ────────────────────────────────────────
 
     def step(self) -> StepResult:
-        """Advance simulation by one tick."""
+        """Advance simulation by one tick with autonomous UAV behaviour."""
         self.tick += 1
         events: list[str] = []
 
         # Diffuse probability matrix
         self.objective_field.step()
+
+        # ── Autopilot: drive each UAV one cell per tick ──
+        if self.mission_status == "running":
+            events.extend(self._autopilot_tick())
 
         # Charge UAVs at base
         for uav in self.fleet.values():
@@ -459,6 +463,7 @@ class GridWorld:
                 old = uav.power
                 uav.charge()
                 if uav.power >= 100.0 and old < 100.0:
+                    uav.status = UAVStatus.IDLE
                     events.append(f"{uav.id} fully charged")
 
         # Check completion
@@ -469,6 +474,120 @@ class GridWorld:
 
         self.events.extend(events)
         return StepResult(tick=self.tick, events=events)
+
+    # ─── Autopilot Logic ────────────────────────────────────────
+
+    def _autopilot_tick(self) -> list[str]:
+        """One tick of autonomous search behaviour for all UAVs."""
+        events: list[str] = []
+        base = self.terrain.base_position
+
+        for uav in self.fleet.values():
+            if not uav.is_operational:
+                continue
+
+            # ── Low power → recall to base ──
+            if uav.is_low_power and (uav.x, uav.y) != base:
+                if uav.status != UAVStatus.RETURNING:
+                    path = self.path_planner.find_path((uav.x, uav.y), base)
+                    uav.path = path[1:] if path else []
+                    uav.status = UAVStatus.RETURNING
+                    events.append(f"{uav.id} low power → returning to base")
+
+            # ── At base + low power → charge ──
+            if (uav.x, uav.y) == base and uav.power < 95.0:
+                uav.status = UAVStatus.CHARGING
+                uav.path = []
+                continue
+
+            # ── Following a path → advance one cell ──
+            if uav.path:
+                next_cell = uav.path[0]
+                uav.path = uav.path[1:]
+
+                if not self.terrain.is_blocked(next_cell[0], next_cell[1]):
+                    # Consume power
+                    if not uav.consume_power(uav.POWER_MOVE):
+                        uav.path = []
+                        continue
+
+                    # Update heading
+                    dx = next_cell[0] - uav.x
+                    dy = next_cell[1] - uav.y
+                    if dx != 0 or dy != 0:
+                        uav.heading = float(np.degrees(np.arctan2(dy, dx)) % 360)
+
+                    uav.x, uav.y = next_cell
+                    self.explored_grid[next_cell[0], next_cell[1]] = 1
+
+                    if uav.status not in (UAVStatus.RETURNING,):
+                        uav.status = UAVStatus.MOVING
+
+                # Path finished → scan
+                if not uav.path:
+                    if uav.status == UAVStatus.RETURNING:
+                        if (uav.x, uav.y) == base:
+                            uav.status = UAVStatus.CHARGING
+                            events.append(f"{uav.id} arrived at base")
+                    else:
+                        uav.status = UAVStatus.SCANNING
+                        scan = self.scan_zone(uav.id)
+                        uav.status = UAVStatus.IDLE
+                        if scan.found_objectives:
+                            for obj_id in scan.found_objectives:
+                                self.objective_field.claim_objective(obj_id, uav.id)
+                            events.append(
+                                f"{uav.id} found {scan.found_objectives} at ({uav.x},{uav.y})"
+                            )
+                continue
+
+            # ── Idle + no path → pick a new target ──
+            if uav.status == UAVStatus.IDLE and not uav.path:
+                target = self._pick_target(uav)
+                if target:
+                    path = self.path_planner.find_path((uav.x, uav.y), target)
+                    if path and len(path) >= 2:
+                        uav.path = path[1:]
+                        uav.status = UAVStatus.MOVING
+                        uav.sector_id = f"→({target[0]},{target[1]})"
+
+        return events
+
+    def _pick_target(self, uav: UAV) -> tuple[int, int] | None:
+        """Choose a search target based on probability heatmap. Fast heuristic."""
+        # Avoid targets other UAVs are heading to
+        claimed: set[tuple[int, int]] = set()
+        for other in self.fleet.values():
+            if other.id != uav.id and other.path:
+                claimed.add(other.path[-1] if isinstance(other.path[-1], tuple)
+                            else tuple(other.path[-1]))
+
+        # Score all unexplored passable cells by probability
+        mask = (self.explored_grid == 0) & (~self.terrain.obstacle_grid)
+        candidates = np.argwhere(mask)
+        if len(candidates) == 0:
+            return None
+
+        # Rank by probability (higher is better) minus distance penalty
+        best_score = -1.0
+        best_pos = None
+        for cx, cy in candidates[:40]:  # limit to 40 candidates for speed
+            pos = (int(cx), int(cy))
+            if pos in claimed:
+                continue
+            prob = float(self.objective_field.prob_matrix[cx, cy])
+            dist = abs(cx - uav.x) + abs(cy - uav.y)  # Manhattan distance
+            if dist == 0:
+                continue
+            # Power budget check: rough estimate, need 2x distance for round trip
+            if dist * uav.POWER_MOVE * 2 > uav.power * 0.7:
+                continue
+            score = prob + 0.1 / (dist + 1)  # prefer high-prob, nearby cells
+            if score > best_score:
+                best_score = score
+                best_pos = pos
+
+        return best_pos
 
     # ─── State Snapshot ─────────────────────────────────────────
 

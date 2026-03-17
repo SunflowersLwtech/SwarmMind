@@ -29,12 +29,13 @@ with open(_prompts_path) as f:
 
 # ─── MCP Toolset ────────────────────────────────────────────────
 
-fleet_tools = McpToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url="http://127.0.0.1:8001/mcp",
-        timeout=30,
-    )
+_conn_params = StreamableHTTPConnectionParams(
+    url="http://127.0.0.1:8001/mcp",
+    timeout=30,
 )
+
+fleet_tools = McpToolset(connection_params=_conn_params)
+fleet_tools.connection_params = _conn_params  # expose for tests
 
 # ─── Agent Model ────────────────────────────────────────────────
 # gemini-2.5-flash is stable for agent loops.

@@ -3,10 +3,25 @@ Test Suite 03: MCP Tool Server
 Tests that all MCP tools are correctly registered, callable, and return valid responses.
 Uses FastMCP's in-memory client (no subprocess needed).
 """
+import json
 import pytest
 import asyncio
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+
+
+def _parse_tool_result(result) -> dict:
+    """Extract JSON dict from a fastmcp CallToolResult.
+
+    fastmcp.Client.call_tool() returns a CallToolResult with a .content
+    list of ContentBlock objects (each has a .text attribute).
+    """
+    if hasattr(result, 'content'):
+        return json.loads(result.content[0].text)
+    # Fallback for older APIs that return a list directly
+    if isinstance(result, list):
+        return json.loads(result[0].text) if hasattr(result[0], 'text') else result
+    return result
 
 
 @pytest.fixture
@@ -97,9 +112,7 @@ class TestFleetTools:
         async with Client(mcp_server) as client:
             result = await client.call_tool("query_fleet", {})
             assert result is not None
-            # Parse the result text
-            import json
-            data = json.loads(result[0].text) if hasattr(result[0], 'text') else result
+            data = _parse_tool_result(result)
             assert data.get('status') in ('ok', 'success'), f"query_fleet failed: {data}"
 
     @pytest.mark.asyncio
@@ -121,11 +134,10 @@ class TestNavigationTools:
     @pytest.mark.asyncio
     async def test_navigate_to(self, mcp_server):
         from fastmcp import Client
-        import json
         async with Client(mcp_server) as client:
             # First get a UAV ID
             fleet_result = await client.call_tool("query_fleet", {})
-            fleet_data = json.loads(fleet_result[0].text) if hasattr(fleet_result[0], 'text') else fleet_result
+            fleet_data = _parse_tool_result(fleet_result)
             uavs = fleet_data.get('data', fleet_data).get('uavs', [])
             assert len(uavs) > 0, "No UAVs in fleet"
             uav_id = uavs[0]['id'] if isinstance(uavs[0], dict) else uavs[0].id
@@ -145,10 +157,9 @@ class TestReconTools:
     @pytest.mark.asyncio
     async def test_sweep_scan(self, mcp_server):
         from fastmcp import Client
-        import json
         async with Client(mcp_server) as client:
             fleet_result = await client.call_tool("query_fleet", {})
-            fleet_data = json.loads(fleet_result[0].text) if hasattr(fleet_result[0], 'text') else fleet_result
+            fleet_data = _parse_tool_result(fleet_result)
             uavs = fleet_data.get('data', fleet_data).get('uavs', [])
             uav_id = uavs[0]['id'] if isinstance(uavs[0], dict) else uavs[0].id
 
@@ -166,10 +177,9 @@ class TestResourceTools:
     @pytest.mark.asyncio
     async def test_recall_uav(self, mcp_server):
         from fastmcp import Client
-        import json
         async with Client(mcp_server) as client:
             fleet_result = await client.call_tool("query_fleet", {})
-            fleet_data = json.loads(fleet_result[0].text) if hasattr(fleet_result[0], 'text') else fleet_result
+            fleet_data = _parse_tool_result(fleet_result)
             uavs = fleet_data.get('data', fleet_data).get('uavs', [])
             uav_id = uavs[0]['id'] if isinstance(uavs[0], dict) else uavs[0].id
 
@@ -188,10 +198,9 @@ class TestToolResponseFormat:
     async def test_all_tools_return_status(self, mcp_server):
         """Every tool response must include a 'status' field."""
         from fastmcp import Client
-        import json
         async with Client(mcp_server) as client:
             # Test parameterless tools
             for tool_name in ["query_fleet"]:
                 result = await client.call_tool(tool_name, {})
-                data = json.loads(result[0].text) if hasattr(result[0], 'text') else result
+                data = _parse_tool_result(result)
                 assert 'status' in data, f"Tool '{tool_name}' response missing 'status': {data}"

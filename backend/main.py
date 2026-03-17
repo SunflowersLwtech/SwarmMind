@@ -229,7 +229,9 @@ if _frontend_dist.exists():
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        """Serve frontend SPA — all non-API routes go to index.html."""
+        """Serve frontend SPA — all non-API/WS routes go to index.html."""
+        if full_path.startswith(("api/", "ws/", "ws")):
+            return FileResponse(_frontend_dist / "index.html")
         file = _frontend_dist / full_path
         if file.exists() and file.is_file():
             return FileResponse(file)

@@ -324,5 +324,6 @@ async def inject_event(event_type: str, params: str, ctx: Context) -> dict:
 # ─── Entry Point ────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("[MCP] Starting SwarmMind Fleet Tool Server on port 8001...")
-    mcp.run(transport="streamable-http")
+    port = int(os.environ.get("MCP_PORT", "8001"))
+    print(f"[MCP] Starting SwarmMind Fleet Tool Server on port {port}...")
+    mcp.run(transport="streamable-http", host="127.0.0.1", port=port)
