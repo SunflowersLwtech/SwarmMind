@@ -1,0 +1,282 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400">
+  <!-- Background -->
+  <rect width="900" height="400" fill="#0B1426" rx="8"/>
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="bold" fill="#00D4FF">Gaussian Probability Heatmap</text>
+
+  <!-- ===== BEFORE SCAN (Left) ===== -->
+  <text x="195" y="62" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="600" fill="#ffffff">Before Scan</text>
+
+  <!-- Grid: 10x10, cell size 28, origin (55, 72) -->
+  <!-- Row 0 -->
+  <rect x="55" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="72" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 1 -->
+  <rect x="55" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="100" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="100" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="100" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="100" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="100" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="100" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="100" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 2 -->
+  <rect x="55" y="128" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="128" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="128" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="128" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="128" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="128" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="128" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="128" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="128" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="128" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 3 -->
+  <rect x="55" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="156" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="156" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="156" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="156" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="156" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 4 — UAV at col 3 -->
+  <rect x="55" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="184" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="184" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="184" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 5 -->
+  <rect x="55" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="212" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 6 -->
+  <rect x="55" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="240" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="240" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="240" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="240" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 7 -->
+  <rect x="55" y="268" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="268" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="268" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="268" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="268" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="268" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 8 -->
+  <rect x="55" y="296" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="296" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="296" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="296" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="296" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 9 -->
+  <rect x="55" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="83" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="111" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="139" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="167" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="195" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="223" y="324" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="251" y="324" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="279" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="307" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+
+  <!-- UAV marker (cyan diamond) at grid position (3,4) → pixel center (153, 198) -->
+  <polygon points="153,188 163,198 153,208 143,198" fill="#00D4FF" stroke="#ffffff" stroke-width="1"/>
+  <text x="153" y="201" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="7" fill="#0B1426" font-weight="bold">UAV</text>
+
+  <!-- Sensor range circle (dashed cyan ring, radius ~2 cells = 56px) -->
+  <circle cx="153" cy="198" r="56" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+
+  <!-- ===== AFTER SCAN (Right) ===== -->
+  <text x="625" y="62" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="600" fill="#ffffff">After Scan</text>
+
+  <!-- Right grid origin (485, 72) -->
+  <!-- Row 0 -->
+  <rect x="485" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="72" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="72" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="72" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 1 -->
+  <rect x="485" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="100" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="100" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="100" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="100" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="100" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="100" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="100" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="100" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 2 — scanned cells (green overlay) -->
+  <rect x="485" y="128" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="128" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="128" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="128" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="128" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="128" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="128" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="128" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="128" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="128" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 3 — scanned cells -->
+  <rect x="485" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="156" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="156" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="156" width="28" height="28" fill="#06D6A0" opacity="0.5" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="156" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="156" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="156" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 4 — UAV row, scanned -->
+  <rect x="485" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="184" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="184" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="184" width="28" height="28" fill="#06D6A0" opacity="0.5" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="184" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="184" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 5 — partially scanned -->
+  <rect x="485" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="212" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="212" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="212" width="28" height="28" fill="#06D6A0" opacity="0.6" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="212" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="212" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="212" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 6 -->
+  <rect x="485" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="240" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="240" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="240" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="240" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="240" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 7 -->
+  <rect x="485" y="268" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="268" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="268" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="268" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="268" width="28" height="28" fill="#E63946" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="268" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="268" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 8 -->
+  <rect x="485" y="296" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="296" width="28" height="28" fill="#2a1a1a" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="296" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="296" width="28" height="28" fill="#F4A261" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="296" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="296" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <!-- Row 9 -->
+  <rect x="485" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="513" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="541" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="569" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="597" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="625" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="653" y="324" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="681" y="324" width="28" height="28" fill="#FFD166" stroke="#0B1426" stroke-width="1"/>
+  <rect x="709" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+  <rect x="737" y="324" width="28" height="28" fill="#1E3A5F" stroke="#0B1426" stroke-width="1"/>
+
+  <!-- UAV marker on right grid at (3,4) → pixel center (583, 198) -->
+  <polygon points="583,188 593,198 583,208 573,198" fill="#00D4FF" stroke="#ffffff" stroke-width="1"/>
+  <text x="583" y="201" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="7" fill="#0B1426" font-weight="bold">UAV</text>
+
+  <!-- Sensor range circle on right grid -->
+  <circle cx="583" cy="198" r="56" fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+
+  <!-- Found objective marker (red star) at scanned cell (2,2) → pixel center (555,142) -->
+  <polygon points="555,130 558,138 567,138 560,143 563,152 555,147 547,152 550,143 543,138 552,138" fill="#E63946" stroke="#ffffff" stroke-width="1"/>
+  <text x="555" y="127" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#E63946" font-weight="bold">FOUND</text>
+
+  <!-- Arrow between grids -->
+  <line x1="355" y1="200" x2="465" y2="200" stroke="#00D4FF" stroke-width="2" stroke-dasharray="6,3"/>
+  <polygon points="465,200 455,194 455,206" fill="#00D4FF"/>
+  <text x="410" y="188" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#00D4FF" font-weight="600">Gaussian Diffusion</text>
+  <text x="410" y="218" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#00D4FF" font-weight="600">+ Scan Update</text>
+
+  <!-- Legend -->
+  <rect x="790" y="80" width="14" height="14" fill="#E63946" rx="2"/>
+  <text x="810" y="92" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">High (&gt;0.7)</text>
+  <rect x="790" y="100" width="14" height="14" fill="#F4A261" rx="2"/>
+  <text x="810" y="112" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Med-High</text>
+  <rect x="790" y="120" width="14" height="14" fill="#FFD166" rx="2"/>
+  <text x="810" y="132" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Medium</text>
+  <rect x="790" y="140" width="14" height="14" fill="#1E3A5F" rx="2"/>
+  <text x="810" y="152" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Low (&lt;0.3)</text>
+  <rect x="790" y="160" width="14" height="14" fill="#2a1a1a" rx="2" stroke="#555" stroke-width="0.5"/>
+  <text x="810" y="172" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Obstacle</text>
+  <rect x="790" y="180" width="14" height="14" fill="#06D6A0" opacity="0.6" rx="2"/>
+  <text x="810" y="192" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Scanned</text>
+  <polygon points="797,208 800,202 803,208 800,214" fill="#00D4FF"/>
+  <text x="810" y="212" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">UAV</text>
+  <polygon points="797,224 799,228 803,228 800,231 801,235 797,232 793,235 794,231 791,228 795,228" fill="#E63946"/>
+  <text x="810" y="232" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#cccccc">Objective</text>
+
+  <!-- Bottom caption -->
+  <text x="450" y="378" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="12" fill="#8899aa" font-style="italic">&#x3C3;=0.5 Gaussian blur each tick &#x2014; probability spreads from known hotspots</text>
+</svg>
