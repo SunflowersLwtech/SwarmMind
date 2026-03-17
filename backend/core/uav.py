@@ -1,0 +1,152 @@
+"""UAV (Unmanned Aerial Vehicle) model for SwarmMind simulation."""
+from __future__ import annotations
+from dataclasses import dataclass, field
+from enum import Enum
+from pydantic import BaseModel
+
+
+class UAVStatus(str, Enum):
+    IDLE = "idle"
+    MOVING = "moving"
+    SCANNING = "scanning"
+    RETURNING = "returning"
+    CHARGING = "charging"
+    OFFLINE = "offline"
+
+
+# Module-level power threshold constant
+LOW_POWER_THRESHOLD = 20.0
+
+# Greek-letter callsigns
+CALLSIGNS = ["Alpha", "Bravo", "Charlie", "Delta", "Echo",
+             "Foxtrot", "Golf", "Hotel", "India", "Juliet"]
+
+
+@dataclass
+class UAV:
+    """Mutable UAV state used by the simulation engine."""
+    id: str
+    x: int = 0
+    y: int = 0
+    power: float = 100.0          # 0-100%
+    status: UAVStatus = UAVStatus.IDLE
+    heading: float = 0.0          # 0-360 degrees
+    sensor_range: int = 2         # scan radius in cells
+    comms_range: int = 10         # communication range in cells
+    sector_id: str | None = None
+    mission_log: list[str] = field(default_factory=list)
+    path: list[tuple[int, int]] = field(default_factory=list)  # current movement path
+
+    # Power consumption constants
+    POWER_MOVE: float = 2.0       # per cell
+    POWER_SCAN: float = 1.0       # per scan
+    POWER_CHARGE: float = 20.0    # per step while charging
+    LOW_POWER: float = 20.0       # threshold for low power warning
+
+    def __post_init__(self):
+        if isinstance(self.status, str):
+            self.status = UAVStatus(self.status)
+
+    @property
+    def is_low_power(self) -> bool:
+        return self.power <= self.LOW_POWER
+
+    @property
+    def is_operational(self) -> bool:
+        return self.status != UAVStatus.OFFLINE and self.power > 0
+
+    def consume_power(self, amount: float) -> bool:
+        """Consume power. Returns False if insufficient."""
+        if self.power < amount:
+            return False
+        self.power = max(0.0, self.power - amount)
+        if self.power == 0:
+            self.status = UAVStatus.OFFLINE
+        return True
+
+    def charge(self) -> float:
+        """Charge one step. Returns new power level."""
+        self.power = min(100.0, self.power + self.POWER_CHARGE)
+        if self.power >= 100.0:
+            self.status = UAVStatus.IDLE
+        return self.power
+
+    def log(self, message: str) -> None:
+        self.mission_log.append(message)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "x": self.x,
+            "y": self.y,
+            "power": round(self.power, 1),
+            "status": self.status.value,
+            "heading": self.heading,
+            "sensor_range": self.sensor_range,
+            "comms_range": self.comms_range,
+            "sector_id": self.sector_id,
+            "is_low_power": self.is_low_power,
+        }
+
+
+# ─── Pydantic Response Models ──────────────────────────────────
+
+class UAVSummary(BaseModel):
+    id: str
+    x: int
+    y: int
+    power: float
+    status: str
+    heading: float
+    sector_id: str | None = None
+    is_low_power: bool = False
+
+class UAVDetail(BaseModel):
+    id: str
+    x: int
+    y: int
+    power: float
+    status: str
+    heading: float
+    sensor_range: int
+    comms_range: int
+    sector_id: str | None = None
+    is_low_power: bool = False
+    mission_log: list[str] = []
+
+class FleetStatus(BaseModel):
+    uavs: list[UAVSummary]
+    total: int
+    active: int
+    idle: int
+    low_power: int
+    avg_power: float
+
+class MoveResult(BaseModel):
+    uav_id: str
+    path: list[list[int]]
+    distance: int
+    power_cost: float
+    new_position: list[int]
+    new_power: float
+    status: str = "ok"
+
+class ScanResult(BaseModel):
+    uav_id: str
+    scanned_cells: list[list[int]]
+    found_objectives: list[str]
+    coverage_delta: float
+    power_after: float
+
+class RecallResult(BaseModel):
+    uav_id: str
+    return_path: list[list[int]]
+    eta: int
+    power_on_arrival: float
+    status: str = "ok"
+
+class RepowerResult(BaseModel):
+    uav_id: str
+    old_power: float
+    new_power: float
+    fully_charged: bool
