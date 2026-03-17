@@ -3,8 +3,8 @@
 Run as independent process:
     conda run -n swarmmind python -m backend.services.tool_server
 
-Uses `from fastmcp import FastMCP` (standalone package) so that
-`fastmcp.Client` can wrap the server instance in tests.
+Uses `from mcp.server.fastmcp import FastMCP` (the SDK's built-in FastMCP).
+fastmcp.Client accepts this type as FastMCP1Server.
 
 Transport: Streamable HTTP at /mcp (SSE is deprecated).
 """
@@ -19,23 +19,21 @@ from pathlib import Path
 # Ensure project root is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from fastmcp import FastMCP, Context
-
-from backend.core.grid_world import GridWorld
-from backend.services.fleet_connector import FleetConnector
+from mcp.server.fastmcp import FastMCP, Context
 
 
-# ─── Lifespan: initialise GridWorld ─────────────────────────────
+# ─── Lifespan: initialise GridWorld (lazy imports for fast startup) ──
 
 @asynccontextmanager
 async def fleet_lifespan(server: FastMCP):
     """Create and yield the simulation world for the server's lifetime."""
+    # Lazy imports — deferred to after uvicorn binds the port
+    from backend.core.grid_world import GridWorld
+    from backend.services.fleet_connector import FleetConnector
+
     world = GridWorld(size=20, num_uavs=5, num_objectives=8, num_obstacles=15)
     connector = FleetConnector(world=world, ready=True)
-    print(f"[MCP] Fleet initialised: {len(world.fleet)} UAVs, "
-          f"{world.objective_field.total_objectives} objectives, "
-          f"grid {world.size}x{world.size}")
-    yield {"connector": connector}
+    yield connector
 
 
 mcp = FastMCP(
@@ -46,7 +44,7 @@ mcp = FastMCP(
 
 def _connector(ctx: Context) -> FleetConnector:
     """Extract FleetConnector from context with guard check."""
-    connector: FleetConnector = ctx.lifespan_context["connector"]
+    connector: FleetConnector = ctx.request_context.lifespan_context
     if not connector.ready:
         raise RuntimeError("Fleet not initialised")
     return connector
@@ -324,6 +322,8 @@ async def inject_event(event_type: str, params: str, ctx: Context) -> dict:
 # ─── Entry Point ────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get("MCP_PORT", "8001"))
-    print(f"[MCP] Starting SwarmMind Fleet Tool Server on port {port}...")
-    mcp.run(transport="streamable-http", host="127.0.0.1", port=port)
+    # Use uvicorn directly to avoid anyio subprocess deadlock (GitHub issue #532)
+    app = mcp.streamable_http_app()
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")

@@ -457,14 +457,20 @@ class GridWorld:
         if self.mission_status == "running":
             events.extend(self._autopilot_tick())
 
-        # Charge UAVs at base
+        # Charge UAVs at base (including reviving offline ones)
+        base = self.terrain.base_position
         for uav in self.fleet.values():
-            if uav.status == UAVStatus.CHARGING and uav.x == 0 and uav.y == 0:
-                old = uav.power
-                uav.charge()
-                if uav.power >= 100.0 and old < 100.0:
-                    uav.status = UAVStatus.IDLE
-                    events.append(f"{uav.id} fully charged")
+            at_base = (uav.x, uav.y) == base
+            if at_base and uav.power < 100.0:
+                if uav.status == UAVStatus.OFFLINE:
+                    uav.status = UAVStatus.CHARGING  # revive
+                if uav.status in (UAVStatus.CHARGING, UAVStatus.IDLE):
+                    uav.status = UAVStatus.CHARGING
+                    old = uav.power
+                    uav.charge()
+                    if uav.power >= 100.0 and old < 100.0:
+                        uav.status = UAVStatus.IDLE
+                        events.append(f"{uav.id} fully charged")
 
         # Check completion
         progress = self.get_search_progress()
@@ -486,13 +492,15 @@ class GridWorld:
             if not uav.is_operational:
                 continue
 
-            # ── Low power → recall to base ──
-            if uav.is_low_power and (uav.x, uav.y) != base:
-                if uav.status != UAVStatus.RETURNING:
+            # ── Smart recall: return when power barely covers the trip home ──
+            if uav.status != UAVStatus.RETURNING and (uav.x, uav.y) != base:
+                dist_to_base = abs(uav.x - base[0]) + abs(uav.y - base[1])
+                power_needed = (dist_to_base + 2) * uav.POWER_MOVE  # +2 margin
+                if uav.power <= power_needed or uav.is_low_power:
                     path = self.path_planner.find_path((uav.x, uav.y), base)
                     uav.path = path[1:] if path else []
                     uav.status = UAVStatus.RETURNING
-                    events.append(f"{uav.id} low power → returning to base")
+                    events.append(f"{uav.id} power={uav.power:.0f}% → returning to base")
 
             # ── At base + low power → charge ──
             if (uav.x, uav.y) == base and uav.power < 95.0:
@@ -554,40 +562,49 @@ class GridWorld:
         return events
 
     def _pick_target(self, uav: UAV) -> tuple[int, int] | None:
-        """Choose a search target based on probability heatmap. Fast heuristic."""
-        # Avoid targets other UAVs are heading to
+        """Choose a search target. Uses sector-based distribution for spread."""
+        # Build set of cells other UAVs are heading to
         claimed: set[tuple[int, int]] = set()
         for other in self.fleet.values():
             if other.id != uav.id and other.path:
-                claimed.add(other.path[-1] if isinstance(other.path[-1], tuple)
-                            else tuple(other.path[-1]))
+                last = other.path[-1]
+                claimed.add(last if isinstance(last, tuple) else tuple(last))
+            if other.id != uav.id and other.is_operational:
+                claimed.add((other.x, other.y))
 
-        # Score all unexplored passable cells by probability
+        # Get unexplored passable cells
         mask = (self.explored_grid == 0) & (~self.terrain.obstacle_grid)
         candidates = np.argwhere(mask)
         if len(candidates) == 0:
             return None
 
-        # Rank by probability (higher is better) minus distance penalty
-        best_score = -1.0
-        best_pos = None
-        for cx, cy in candidates[:40]:  # limit to 40 candidates for speed
-            pos = (int(cx), int(cy))
-            if pos in claimed:
-                continue
-            prob = float(self.objective_field.prob_matrix[cx, cy])
-            dist = abs(cx - uav.x) + abs(cy - uav.y)  # Manhattan distance
-            if dist == 0:
-                continue
-            # Power budget check: rough estimate, need 2x distance for round trip
-            if dist * uav.POWER_MOVE * 2 > uav.power * 0.7:
-                continue
-            score = prob + 0.1 / (dist + 1)  # prefer high-prob, nearby cells
-            if score > best_score:
-                best_score = score
-                best_pos = pos
+        # Power budget
+        base = self.terrain.base_position
+        max_one_way = int((uav.power * 0.4) / uav.POWER_MOVE)  # 40% budget outbound
 
-        return best_pos
+        # Filter by power budget and distance
+        dists = np.abs(candidates[:, 0] - uav.x) + np.abs(candidates[:, 1] - uav.y)
+        reachable = dists <= max_one_way
+        candidates = candidates[reachable]
+        dists = dists[reachable]
+
+        if len(candidates) == 0:
+            return None
+
+        # Score: probability + penalty for being near other UAVs
+        probs = self.objective_field.prob_matrix[candidates[:, 0], candidates[:, 1]]
+        dists_f = np.maximum(dists.astype(float), 1.0)
+
+        # Distance from claimed targets (encourage spread)
+        repulsion = np.zeros(len(candidates))
+        for cx, cy in claimed:
+            d = np.abs(candidates[:, 0] - cx) + np.abs(candidates[:, 1] - cy)
+            repulsion += 1.0 / (d.astype(float) + 1.0)
+
+        scores = (probs + 0.1) / np.sqrt(dists_f) - repulsion * 0.3
+
+        best_idx = int(np.argmax(scores))
+        return (int(candidates[best_idx][0]), int(candidates[best_idx][1]))
 
     # ─── State Snapshot ─────────────────────────────────────────
 

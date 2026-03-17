@@ -2,7 +2,15 @@
 from __future__ import annotations
 import numpy as np
 from pydantic import BaseModel
-from scipy.ndimage import gaussian_filter
+_gaussian_filter = None
+
+def gaussian_filter(matrix, sigma=0.5):
+    """Lazy-loaded scipy gaussian_filter to speed up module import."""
+    global _gaussian_filter
+    if _gaussian_filter is None:
+        from scipy.ndimage import gaussian_filter as _gf
+        _gaussian_filter = _gf
+    return _gaussian_filter(matrix, sigma=sigma)
 
 
 class Objective:

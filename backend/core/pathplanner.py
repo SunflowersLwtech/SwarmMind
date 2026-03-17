@@ -31,8 +31,10 @@ class PathPlanner:
         The library Grid expects matrix[row][col] with 1=walkable, 0=blocked.
         Grid.node(x, y) where x=col, y=row.
         """
-        passable = (~self.obstacle_matrix).astype(int)
-        grid = Grid(matrix=passable.tolist())
+        # Cache the passable list to avoid repeated numpy→list conversion
+        if not hasattr(self, '_passable_list'):
+            self._passable_list = (~self.obstacle_matrix).astype(int).tolist()
+        grid = Grid(matrix=self._passable_list)
 
         # pathfinding lib: node(x=col, y=row)
         start_node = grid.node(start[1], start[0])
