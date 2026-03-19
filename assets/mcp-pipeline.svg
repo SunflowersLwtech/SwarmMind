@@ -1,122 +1,141 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400">
-  <!-- Background -->
-  <rect width="1000" height="400" rx="12" fill="#0B1426"/>
-
-  <!-- Title -->
-  <text x="500" y="38" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">MCP-Driven Command Pipeline</text>
-
-  <!-- Defs for gradients -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520">
   <defs>
-    <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.08"/>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.06"/>
     </linearGradient>
     <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.15"/>
-      <stop offset="50%" stop-color="#00D4FF" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.15"/>
+      <stop offset="0%" stop-color="#4DA8DA" stop-opacity="0.12"/>
+      <stop offset="50%" stop-color="#00D4FF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#4DA8DA" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="catGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4DA8DA" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#4DA8DA" stop-opacity="0.05"/>
     </linearGradient>
   </defs>
 
-  <!-- ============ STAGE 1: Assessor ============ -->
-  <rect x="30" y="65" width="185" height="60" rx="12" fill="url(#cyanGrad)" stroke="#00D4FF" stroke-width="1.5"/>
-  <!-- Gemini sparkle -->
-  <polygon points="45,78 47,84 53,84 48,88 50,94 45,90 40,94 42,88 37,84 43,84" fill="#00D4FF" opacity="0.7"/>
-  <text x="122" y="95" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700" fill="#00D4FF">Assessor</text>
-  <text x="122" y="115" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.5">Agent 1</text>
+  <!-- Background -->
+  <rect width="1100" height="520" rx="12" fill="#0B1426"/>
 
-  <!-- Tools below Assessor -->
-  <text x="122" y="145" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">query_fleet</text>
-  <text x="122" y="159" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">get_progress</text>
-  <text x="122" y="173" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">assess_endurance</text>
-
-  <!-- Vertical connector: box to tools -->
-  <line x1="122" y1="125" x2="122" y2="135" stroke="#00D4FF" stroke-width="1" opacity="0.4"/>
-
-  <!-- ============ Arrow 1: Assessor -> Strategist ============ -->
-  <line x1="215" y1="95" x2="268" y2="95" stroke="#00D4FF" stroke-width="1.5" opacity="0.7"/>
-  <polygon points="268,91 276,95 268,99" fill="#00D4FF" opacity="0.7"/>
-  <text x="246" y="86" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">assessment</text>
-
-  <!-- ============ STAGE 2: Strategist ============ -->
-  <rect x="278" y="65" width="185" height="60" rx="12" fill="url(#cyanGrad)" stroke="#00D4FF" stroke-width="1.5"/>
-  <polygon points="293,78 295,84 301,84 296,88 298,94 293,90 288,94 290,88 285,84 291,84" fill="#00D4FF" opacity="0.7"/>
-  <text x="370" y="95" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700" fill="#00D4FF">Strategist</text>
-  <text x="370" y="115" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.5">Agent 2</text>
-
-  <!-- Tools below Strategist -->
-  <text x="370" y="145" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">partition</text>
-  <text x="370" y="159" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">detect_frontier</text>
-  <text x="370" y="173" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">plan_route</text>
-
-  <line x1="370" y1="125" x2="370" y2="135" stroke="#00D4FF" stroke-width="1" opacity="0.4"/>
-
-  <!-- ============ Arrow 2: Strategist -> Dispatcher ============ -->
-  <line x1="463" y1="95" x2="516" y2="95" stroke="#00D4FF" stroke-width="1.5" opacity="0.7"/>
-  <polygon points="516,91 524,95 516,99" fill="#00D4FF" opacity="0.7"/>
-  <text x="494" y="86" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">strategy</text>
-
-  <!-- ============ STAGE 3: Dispatcher ============ -->
-  <rect x="526" y="65" width="185" height="60" rx="12" fill="url(#cyanGrad)" stroke="#00D4FF" stroke-width="1.5"/>
-  <polygon points="541,78 543,84 549,84 544,88 546,94 541,90 536,94 538,88 533,84 539,84" fill="#00D4FF" opacity="0.7"/>
-  <text x="618" y="95" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700" fill="#00D4FF">Dispatcher</text>
-  <text x="618" y="115" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.5">Agent 3</text>
-
-  <!-- Tools below Dispatcher -->
-  <text x="618" y="145" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">navigate_to</text>
-  <text x="618" y="159" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">sweep_scan</text>
-  <text x="618" y="173" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">recall_uav</text>
-  <text x="618" y="187" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">mark_objective</text>
-
-  <line x1="618" y1="125" x2="618" y2="135" stroke="#00D4FF" stroke-width="1" opacity="0.4"/>
-
-  <!-- ============ Arrow 3: Dispatcher -> Analyst ============ -->
-  <line x1="711" y1="95" x2="764" y2="95" stroke="#00D4FF" stroke-width="1.5" opacity="0.7"/>
-  <polygon points="764,91 772,95 764,99" fill="#00D4FF" opacity="0.7"/>
-  <text x="738" y="86" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">execution_log</text>
-
-  <!-- ============ STAGE 4: Analyst ============ -->
-  <rect x="774" y="65" width="195" height="60" rx="12" fill="url(#cyanGrad)" stroke="#00D4FF" stroke-width="1.5"/>
-  <polygon points="789,78 791,84 797,84 792,88 794,94 789,90 784,94 786,88 781,84 787,84" fill="#00D4FF" opacity="0.7"/>
-  <text x="871" y="95" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="700" fill="#00D4FF">Analyst</text>
-  <text x="871" y="115" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#FFFFFF" opacity="0.5">Agent 4</text>
-
-  <!-- Tools below Analyst -->
-  <text x="871" y="145" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">get_op_summary</text>
-
-  <line x1="871" y1="125" x2="871" y2="135" stroke="#00D4FF" stroke-width="1" opacity="0.4"/>
-
-  <!-- Output label after Analyst -->
-  <text x="871" y="210" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#F4A261" font-style="italic">report</text>
-  <line x1="871" y1="155" x2="871" y2="205" stroke="#F4A261" stroke-width="1" opacity="0.5" stroke-dasharray="4,3"/>
-
-  <!-- ============ Bottom Bar: MCP Tool Server ============ -->
-  <rect x="30" y="340" width="940" height="42" rx="10" fill="url(#barGrad)" stroke="#00D4FF" stroke-width="1" opacity="0.9"/>
-  <text x="500" y="366" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="600" fill="#FFFFFF">MCP Tool Server — 18 Tools via Streamable HTTP</text>
-
-  <!-- Vertical dashed lines connecting each agent to the bottom bar -->
-  <line x1="122" y1="190" x2="122" y2="340" stroke="#00D4FF" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
-  <line x1="370" y1="190" x2="370" y2="340" stroke="#00D4FF" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
-  <line x1="618" y1="200" x2="618" y2="340" stroke="#00D4FF" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
-  <line x1="871" y1="165" x2="871" y2="340" stroke="#00D4FF" stroke-width="1" opacity="0.2" stroke-dasharray="4,4"/>
-
-  <!-- Small connection dots at the bar -->
-  <circle cx="122" cy="340" r="3" fill="#00D4FF" opacity="0.6"/>
-  <circle cx="370" cy="340" r="3" fill="#00D4FF" opacity="0.6"/>
-  <circle cx="618" cy="340" r="3" fill="#00D4FF" opacity="0.6"/>
-  <circle cx="871" cy="340" r="3" fill="#00D4FF" opacity="0.6"/>
-
-  <!-- Decorative corner accents -->
+  <!-- Corner accents -->
   <line x1="10" y1="15" x2="10" y2="35" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
   <line x1="10" y1="15" x2="30" y2="15" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="990" y1="15" x2="990" y2="35" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="990" y1="15" x2="970" y2="15" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="10" y1="385" x2="10" y2="365" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="10" y1="385" x2="30" y2="385" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="990" y1="385" x2="990" y2="365" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
-  <line x1="990" y1="385" x2="970" y2="385" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="1090" y1="15" x2="1090" y2="35" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="1090" y1="15" x2="1070" y2="15" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="10" y1="505" x2="10" y2="485" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="10" y1="505" x2="30" y2="505" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="1090" y1="505" x2="1090" y2="485" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+  <line x1="1090" y1="505" x2="1070" y2="505" stroke="#00D4FF" stroke-width="1" opacity="0.3"/>
+
+  <!-- Title -->
+  <text x="550" y="38" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">MCP-Driven Command Pipeline</text>
+  <text x="550" y="56" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="11" fill="#8899AA">4 AI Agents  &#x2022;  8 MCP Tools  &#x2022;  Streamable HTTP</text>
+
+  <!-- ===== AGENT ROW (y=80) ===== -->
+  <!-- Agent 1: Assessor -->
+  <rect x="40" y="80" width="200" height="56" rx="10" fill="url(#agentGrad)" stroke="#00D4FF" stroke-width="1.5"/>
+  <text x="140" y="108" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="700" fill="#00D4FF">Assessor</text>
+  <text x="140" y="126" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#8899AA">reads fleet + quadrant coverage</text>
+
+  <!-- Arrow 1->2 -->
+  <line x1="240" y1="108" x2="298" y2="108" stroke="#00D4FF" stroke-width="1.5" opacity="0.6"/>
+  <polygon points="298,104 308,108 298,112" fill="#00D4FF" opacity="0.7"/>
+  <text x="270" y="100" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">assessment</text>
+
+  <!-- Agent 2: Strategist -->
+  <rect x="310" y="80" width="200" height="56" rx="10" fill="url(#agentGrad)" stroke="#00D4FF" stroke-width="1.5"/>
+  <text x="410" y="108" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="700" fill="#4DA8DA">Strategist</text>
+  <text x="410" y="126" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#8899AA">evaluates options + plans routes</text>
+
+  <!-- Arrow 2->3 -->
+  <line x1="510" y1="108" x2="568" y2="108" stroke="#00D4FF" stroke-width="1.5" opacity="0.6"/>
+  <polygon points="568,104 578,108 568,112" fill="#00D4FF" opacity="0.7"/>
+  <text x="540" y="100" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">strategy</text>
+
+  <!-- Agent 3: Dispatcher -->
+  <rect x="580" y="80" width="200" height="56" rx="10" fill="url(#agentGrad)" stroke="#06D6A0" stroke-width="1.5"/>
+  <text x="680" y="108" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="700" fill="#06D6A0">Dispatcher</text>
+  <text x="680" y="126" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#8899AA">takes action on drones</text>
+
+  <!-- Arrow 3->4 -->
+  <line x1="780" y1="108" x2="838" y2="108" stroke="#00D4FF" stroke-width="1.5" opacity="0.6"/>
+  <polygon points="838,104 848,108 838,112" fill="#00D4FF" opacity="0.7"/>
+  <text x="810" y="100" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" font-style="italic">exec_log</text>
+
+  <!-- Agent 4: Analyst -->
+  <rect x="850" y="80" width="200" height="56" rx="10" fill="url(#agentGrad)" stroke="#F4A261" stroke-width="1.5"/>
+  <text x="950" y="108" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="700" fill="#F4A261">Analyst</text>
+  <text x="950" y="126" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="9" fill="#8899AA">reports results</text>
+
+  <!-- ===== TOOL CALL ANNOTATIONS (y=155..195) ===== -->
+  <line x1="140" y1="136" x2="140" y2="157" stroke="#00D4FF" stroke-width="1" opacity="0.35" stroke-dasharray="3,3"/>
+  <text x="140" y="170" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">get_situation_overview</text>
+
+  <line x1="410" y1="136" x2="410" y2="157" stroke="#00D4FF" stroke-width="1" opacity="0.35" stroke-dasharray="3,3"/>
+  <text x="410" y="170" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">get_frontier_targets</text>
+  <text x="410" y="184" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">plan_route</text>
+
+  <line x1="680" y1="136" x2="680" y2="157" stroke="#06D6A0" stroke-width="1" opacity="0.35" stroke-dasharray="3,3"/>
+  <text x="680" y="170" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">assign_search_mission</text>
+  <text x="680" y="184" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">recall_drone</text>
+
+  <line x1="950" y1="136" x2="950" y2="157" stroke="#F4A261" stroke-width="1" opacity="0.35" stroke-dasharray="3,3"/>
+  <text x="950" y="170" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#06D6A0">get_situation_overview</text>
+
+  <!-- ===== VALIDATION NOTE on Dispatcher ===== -->
+  <rect x="595" y="196" width="170" height="30" rx="6" fill="#F4A261" fill-opacity="0.1" stroke="#F4A261" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <text x="680" y="215" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8.5" fill="#F4A261">validates round-trip power</text>
+  <text x="680" y="227" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="8" fill="#F4A261" opacity="0.7">&#x2192; accepted / rejected</text>
+  <line x1="680" y1="184" x2="680" y2="196" stroke="#F4A261" stroke-width="0.8" opacity="0.4" stroke-dasharray="3,2"/>
+
+  <!-- ===== DASHED LINES TO MCP BAR ===== -->
+  <line x1="140" y1="180" x2="140" y2="260" stroke="#00D4FF" stroke-width="0.8" opacity="0.18" stroke-dasharray="4,4"/>
+  <line x1="410" y1="194" x2="410" y2="260" stroke="#00D4FF" stroke-width="0.8" opacity="0.18" stroke-dasharray="4,4"/>
+  <line x1="680" y1="237" x2="680" y2="260" stroke="#06D6A0" stroke-width="0.8" opacity="0.18" stroke-dasharray="4,4"/>
+  <line x1="950" y1="180" x2="950" y2="260" stroke="#F4A261" stroke-width="0.8" opacity="0.18" stroke-dasharray="4,4"/>
+
+  <!-- ===== MCP TOOL SERVER BAR (y=260) ===== -->
+  <rect x="30" y="260" width="1040" height="40" rx="10" fill="url(#barGrad)" stroke="#00D4FF" stroke-width="1"/>
+  <text x="550" y="285" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="600" fill="#FFFFFF">MCP Tool Server &#x2014; 8 Tools via Streamable HTTP</text>
+  <circle cx="140" cy="260" r="3" fill="#00D4FF" opacity="0.5"/>
+  <circle cx="410" cy="260" r="3" fill="#4DA8DA" opacity="0.5"/>
+  <circle cx="680" cy="260" r="3" fill="#06D6A0" opacity="0.5"/>
+  <circle cx="950" cy="260" r="3" fill="#F4A261" opacity="0.5"/>
+
+  <!-- ===== TOOL CATEGORIES (y=320) ===== -->
+  <!-- Fleet Intel -->
+  <rect x="55" y="320" width="270" height="100" rx="10" fill="url(#catGrad)" stroke="#4DA8DA" stroke-width="1"/>
+  <text x="190" y="344" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="700" fill="#4DA8DA">Fleet Intel</text>
+  <line x1="100" y1="354" x2="280" y2="354" stroke="#4DA8DA" stroke-width="0.5" opacity="0.3"/>
+  <text x="190" y="373" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">discover_fleet</text>
+  <text x="190" y="393" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">get_drone_status</text>
+
+  <!-- Mission Control -->
+  <rect x="365" y="320" width="370" height="100" rx="10" fill="url(#catGrad)" stroke="#06D6A0" stroke-width="1"/>
+  <text x="550" y="344" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="700" fill="#06D6A0">Mission Control</text>
+  <line x1="410" y1="354" x2="690" y2="354" stroke="#06D6A0" stroke-width="0.5" opacity="0.3"/>
+  <text x="550" y="373" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">assign_search_mission  &#x2022;  assign_scan_mission</text>
+  <text x="550" y="393" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">recall_drone</text>
+
+  <!-- Situational -->
+  <rect x="775" y="320" width="270" height="100" rx="10" fill="url(#catGrad)" stroke="#F4A261" stroke-width="1"/>
+  <text x="910" y="344" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="700" fill="#F4A261">Situational</text>
+  <line x1="820" y1="354" x2="1000" y2="354" stroke="#F4A261" stroke-width="0.5" opacity="0.3"/>
+  <text x="910" y="373" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">get_situation_overview</text>
+  <text x="910" y="393" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#CCDDEE">get_frontier_targets  &#x2022;  plan_route</text>
+
+  <!-- Connection lines from bar to categories -->
+  <line x1="190" y1="300" x2="190" y2="320" stroke="#4DA8DA" stroke-width="0.8" opacity="0.3" stroke-dasharray="3,3"/>
+  <line x1="550" y1="300" x2="550" y2="320" stroke="#06D6A0" stroke-width="0.8" opacity="0.3" stroke-dasharray="3,3"/>
+  <line x1="910" y1="300" x2="910" y2="320" stroke="#F4A261" stroke-width="0.8" opacity="0.3" stroke-dasharray="3,3"/>
+
+  <!-- ===== FLOW SUMMARY (y=450) ===== -->
+  <text x="550" y="460" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="10" fill="#8899AA">
+    1. Assessor &#x2192; get_situation_overview    2. Strategist &#x2192; get_frontier_targets + plan_route    3. Dispatcher &#x2192; assign_search_mission / recall_drone    4. Analyst &#x2192; get_situation_overview
+  </text>
 
   <!-- Subtle glow dots -->
-  <circle cx="30" cy="340" r="1.5" fill="#00D4FF" opacity="0.3"/>
-  <circle cx="970" cy="340" r="1.5" fill="#00D4FF" opacity="0.3"/>
+  <circle cx="30" cy="280" r="1.5" fill="#00D4FF" opacity="0.25"/>
+  <circle cx="1070" cy="280" r="1.5" fill="#00D4FF" opacity="0.25"/>
 </svg>
