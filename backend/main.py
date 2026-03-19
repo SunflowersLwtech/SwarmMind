@@ -199,7 +199,7 @@ async def _handle_ws_command(cmd: dict, client_id: str):
     elif cmd_type == "remove_uav":
         uav_id = cmd.get("payload", {}).get("uav_id")
         if uav_id and uav_id in world.fleet and len(world.fleet) > 1:
-            del world.fleet[uav_id]
+            world.remove_uav(uav_id)
     elif cmd_type == "reload":
         payload = cmd.get("payload", {})
         size = max(8, min(50, int(payload.get("grid_size", 20))))
@@ -324,7 +324,7 @@ async def fleet_remove(body: dict = {}):
         return {"status": "error", "message": f"'{uav_id}' not found"}
     if len(world.fleet) <= 1:
         return {"status": "error", "message": "Cannot remove last UAV"}
-    del world.fleet[uav_id]
+    world.remove_uav(uav_id)
     return {"status": "ok", "removed": uav_id, "fleet_size": len(world.fleet)}
 
 

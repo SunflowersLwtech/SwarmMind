@@ -9,10 +9,12 @@ from .uav import (
     UAVSummary, UAVDetail, FleetStatus,
     MoveResult, ScanResult, RecallResult, RepowerResult,
     WaypointResult,
+    Mission, MissionType, MissionStatus,
 )
 from .terrain import Terrain
 from .objective import ObjectiveField, SearchProgress, ThreatMap, FrontierCell
 from .pathplanner import PathPlanner, Route
+from .drone import Drone
 
 
 # ─── Response Models ────────────────────────────────────────────
@@ -82,8 +84,8 @@ class GridWorld:
         # Pathfinding
         self.path_planner = PathPlanner(self.terrain.obstacle_grid)
 
-        # Fleet
-        self.fleet: dict[str, UAV] = {}
+        # Fleet: Drone wrappers around UAVs
+        self.drones: dict[str, Drone] = {}
         for i in range(num_uavs):
             callsign = CALLSIGNS[i] if i < len(CALLSIGNS) else f"UAV-{i}"
             self.add_uav(callsign)
@@ -91,17 +93,66 @@ class GridWorld:
         # Sectors (set after partition_sectors is called)
         self.sectors: dict[str, Sector] | None = None
 
+    # ─── Environment Protocol (used by Drone) ────────────────────
+
+    @property
+    def base_position(self) -> tuple[int, int]:
+        return self.terrain.base_position
+
+    def is_blocked(self, x: int, y: int) -> bool:
+        return self.terrain.is_blocked(x, y)
+
+    def find_path(
+        self, start: tuple[int, int], end: tuple[int, int],
+    ) -> list[tuple[int, int]]:
+        return self.path_planner.find_path(start, end)
+
+    def get_occupied_cells(
+        self, exclude_id: str | None = None,
+    ) -> set[tuple[int, int]]:
+        """Set of cells occupied by operational UAVs (excluding base and *exclude_id*)."""
+        base = self.terrain.base_position
+        occupied: set[tuple[int, int]] = set()
+        for drone in self.drones.values():
+            uav = drone.uav
+            if uav.id == exclude_id or not uav.is_operational:
+                continue
+            pos = (uav.x, uav.y)
+            if pos != base:
+                occupied.add(pos)
+        return occupied
+
+    def get_unexplored_mask(self) -> np.ndarray:
+        """Boolean mask: True for unexplored passable cells."""
+        return (self.explored_grid == 0) & (~self.terrain.obstacle_grid)
+
+    def get_prob_matrix(self) -> np.ndarray:
+        return self.objective_field.prob_matrix
+
     # ─── Fleet Management ───────────────────────────────────────
+
+    @property
+    def fleet(self) -> dict[str, UAV]:
+        """Backward-compatible view: {drone_id: UAV object}."""
+        return {did: drone.uav for did, drone in self.drones.items()}
 
     def add_uav(self, uav_id: str) -> UAV:
         """Add a UAV at the base station."""
         uav = UAV(id=uav_id, x=0, y=0)
         uav.log(f"Deployed at base (0,0)")
-        self.fleet[uav_id] = uav
+        self.drones[uav_id] = Drone(uav)
         return uav
 
+    def remove_uav(self, uav_id: str) -> bool:
+        """Remove a UAV from the fleet. Returns True if removed."""
+        if uav_id in self.drones:
+            del self.drones[uav_id]
+            return True
+        return False
+
     def get_uav(self, uav_id: str) -> UAV | None:
-        return self.fleet.get(uav_id)
+        drone = self.drones.get(uav_id)
+        return drone.uav if drone else None
 
     # ─── Movement ───────────────────────────────────────────────
 
@@ -190,7 +241,8 @@ class GridWorld:
         The UAV does NOT teleport — it moves 1 cell/tick via autopilot.
         Agent commands take priority over autopilot's autonomous decisions.
         """
-        uav = self.fleet[uav_id]
+        drone = self.drones[uav_id]
+        uav = drone.uav
 
         _err = lambda msg="error": WaypointResult(
             uav_id=uav_id, waypoint=[target_x, target_y],
@@ -225,6 +277,12 @@ class GridWorld:
         uav._idle_since_tick = 0  # Reset idle timer on new command
         uav.status = UAVStatus.MOVING
         uav.log(f"Waypoint set: ({target_x},{target_y}), ETA {distance} ticks")
+
+        # Track mission on drone
+        drone.current_mission = Mission(
+            type=MissionType.SEARCH, target=(target_x, target_y),
+            status=MissionStatus.IN_PROGRESS, assigned_by="agent",
+        )
 
         self._emit(f"{uav_id} waypoint → ({target_x},{target_y})")
 
@@ -382,7 +440,8 @@ class GridWorld:
 
         Unlike recall_uav() which teleports, this sets a path for gradual return.
         """
-        uav = self.fleet[uav_id]
+        drone = self.drones[uav_id]
+        uav = drone.uav
         base = self.terrain.base_position
 
         _err = lambda: WaypointResult(
@@ -408,6 +467,12 @@ class GridWorld:
         uav.command_source = "agent"
         uav.status = UAVStatus.RETURNING
         uav.log(f"Recall waypoint: base, ETA {distance} ticks")
+
+        # Track mission on drone
+        drone.current_mission = Mission(
+            type=MissionType.RECALL, target=base,
+            status=MissionStatus.IN_PROGRESS, assigned_by="agent",
+        )
 
         self._emit(f"{uav_id} recall waypoint → base")
 
@@ -488,7 +553,8 @@ class GridWorld:
 
         base = self.terrain.base_position
         endurance = []
-        for uav in self.fleet.values():
+        for drone in self.drones.values():
+            uav = drone.uav
             route = self.plan_route(uav.x, uav.y, base[0], base[1])
             cells_remaining = int(uav.power // uav.POWER_MOVE)
             power_to_return = route.power_cost
@@ -496,6 +562,14 @@ class GridWorld:
             safe_to_recall = route.reachable and power_after_return > 10.0
             urgent_recall = route.reachable and power_after_return < 5.0
             explorable_cells = max(0, int((uav.power - power_to_return - 5.0) // uav.POWER_MOVE))
+            # Mission info from drone
+            mission_info = None
+            if drone.current_mission:
+                mission_info = {
+                    "type": drone.current_mission.type.value,
+                    "status": drone.current_mission.status.value,
+                    "assigned_by": drone.current_mission.assigned_by,
+                }
             endurance.append({
                 "uav_id": uav.id,
                 "status": uav.status.value,
@@ -506,13 +580,36 @@ class GridWorld:
                 "power_to_return": round(power_to_return, 1),
                 "safe_to_recall": safe_to_recall,
                 "urgent_recall": urgent_recall,
+                "mission": mission_info,
             })
+
+        # Spatial intel: which quadrants still need exploration
+        half = self.size // 2
+        quadrants = {}
+        for name, (r0, r1, c0, c1) in [
+            ("NW", (0, half, 0, half)),
+            ("NE", (0, half, half, self.size)),
+            ("SW", (half, self.size, 0, half)),
+            ("SE", (half, self.size, half, self.size)),
+        ]:
+            region = self.explored_grid[r0:r1, c0:c1]
+            obs = self.terrain.obstacle_grid[r0:r1, c0:c1]
+            passable = int((~obs).sum())
+            explored = int(region.sum())
+            pct = round(explored / passable * 100, 1) if passable > 0 else 100.0
+            quadrants[name] = {
+                "coverage_pct": pct,
+                "center": [(r0 + r1) // 2, (c0 + c1) // 2],
+            }
 
         return {
             "fleet": fleet.model_dump(),
             "progress": progress.model_dump(),
             "hotspots": hotspots,
             "endurance": endurance,
+            "quadrants": quadrants,
+            "grid_size": self.size,
+            "base": list(base),
             "tick": self.tick,
             "mission_status": self.mission_status,
         }
@@ -610,13 +707,15 @@ class GridWorld:
         # Diffuse probability matrix
         self.objective_field.step()
 
-        # ── Autopilot: drive each UAV one cell per tick ──
+        # ── Drone autonomous behaviour: each drone steps independently ──
         if self.mission_status == "running":
-            events.extend(self._autopilot_tick())
+            for drone in self.drones.values():
+                events.extend(drone.step(self))
 
         # Rescue stranded UAVs adjacent to base (power=0, can't move normally)
         base = self.terrain.base_position
-        for uav in self.fleet.values():
+        for drone in self.drones.values():
+            uav = drone.uav
             if uav.power <= 0 and (uav.x, uav.y) != base:
                 dist = abs(uav.x - base[0]) + abs(uav.y - base[1])
                 if dist <= 1:
@@ -627,7 +726,8 @@ class GridWorld:
                     events.append(f"{uav.id} emergency landing at base")
 
         # Charge UAVs at base (including reviving offline ones)
-        for uav in self.fleet.values():
+        for drone in self.drones.values():
+            uav = drone.uav
             at_base = (uav.x, uav.y) == base
             if at_base and uav.power < 100.0:
                 if uav.status == UAVStatus.OFFLINE:
@@ -648,239 +748,6 @@ class GridWorld:
 
         self.events.extend(events)
         return StepResult(tick=self.tick, events=events)
-
-    # ─── Autopilot Logic ────────────────────────────────────────
-
-    # Safety override threshold: autopilot ignores agent commands below this
-    CRITICAL_POWER = 10.0
-    # Ticks before agent-controlled idle UAV reverts to autopilot
-    AGENT_IDLE_TIMEOUT = 10
-
-    def _autopilot_tick(self) -> list[str]:
-        """One tick of autonomous search behaviour for all UAVs.
-
-        Command priority system (industry best practice):
-        - Agent commands (command_source="agent") take priority over autopilot
-        - Autopilot only overrides agent on CRITICAL power (< 10%)
-        - Autopilot autonomous decisions only apply to autopilot-controlled UAVs
-        - command_source resets to "autopilot" when agent-set path completes
-        """
-        events: list[str] = []
-        base = self.terrain.base_position
-
-        for uav in self.fleet.values():
-            if not uav.is_operational:
-                continue
-
-            # ── Smart recall: power-aware return-to-base ──
-            if (uav.x, uav.y) != base:
-                # Use actual A* distance (not Manhattan) for accurate power estimate
-                recall_route = self.path_planner.find_path((uav.x, uav.y), base)
-                real_dist = len(recall_route) - 1 if recall_route and len(recall_route) > 1 else (abs(uav.x - base[0]) + abs(uav.y - base[1]))
-                power_needed = (real_dist + 1) * uav.POWER_MOVE  # +1 cell safety margin
-
-                should_recall = False
-                if uav.status == UAVStatus.RETURNING:
-                    # Already returning — only upgrade to safety override
-                    if uav.command_source == "agent" and uav.power <= self.CRITICAL_POWER:
-                        should_recall = True
-                        events.append(
-                            f"{uav.id} SAFETY OVERRIDE: critical power {uav.power:.0f}%"
-                        )
-                elif uav.command_source == "agent":
-                    # Agent commands: safety-override on critical power
-                    if uav.power <= self.CRITICAL_POWER:
-                        should_recall = True
-                        events.append(
-                            f"{uav.id} SAFETY OVERRIDE: critical power {uav.power:.0f}%, ignoring agent"
-                        )
-                else:
-                    # Autopilot: normal low-power threshold
-                    if uav.power <= power_needed or uav.is_low_power:
-                        should_recall = True
-
-                if should_recall:
-                    path = self.path_planner.find_path((uav.x, uav.y), base)
-                    uav.path = path[1:] if path else []
-                    uav.status = UAVStatus.RETURNING
-                    uav.command_source = "autopilot"
-                    if not any(uav.id in e for e in events):
-                        events.append(f"{uav.id} power={uav.power:.0f}% → returning to base")
-
-            # ── At base → charge (block agent departure below 30%) ──
-            if (uav.x, uav.y) == base and uav.power < 95.0:
-                # Agent can only depart base above 30% power — otherwise force charge
-                if uav.command_source == "agent" and uav.path and uav.power >= 30.0:
-                    pass  # Agent authority: allow departure above minimum
-                else:
-                    uav.status = UAVStatus.CHARGING
-                    uav.path = []
-                    uav.command_source = "autopilot"
-                    continue
-
-            # ── Following a path → advance one cell ──
-            if uav.path:
-                next_cell = uav.path[0]
-                uav.path = uav.path[1:]
-
-                if not self.terrain.is_blocked(next_cell[0], next_cell[1]):
-                    # Collision avoidance: skip move if another UAV occupies the cell
-                    # Exempt: base area (within 2 cells) and returning UAVs heading home
-                    next_pos = (next_cell[0], next_cell[1]) if isinstance(next_cell, tuple) else tuple(next_cell)
-                    near_base = (abs(next_pos[0] - base[0]) + abs(next_pos[1] - base[1])) <= 2
-                    if (not near_base
-                            and uav.status != UAVStatus.RETURNING
-                            and next_pos in self._occupied_cells(uav.id)):
-                        uav.path.insert(0, next_cell)
-                        continue
-
-                    # Free move to base when adjacent and returning (emergency landing)
-                    if next_pos == self.terrain.base_position and uav.status == UAVStatus.RETURNING:
-                        pass  # No power cost — emergency return
-                    elif not uav.consume_power(uav.POWER_MOVE):
-                        # Out of power mid-field — still let them crawl to base if adjacent
-                        if next_pos == self.terrain.base_position:
-                            pass  # Emergency landing
-                        else:
-                            uav.path = []
-                            uav.command_source = "autopilot"
-                            continue
-
-                    dx = next_cell[0] - uav.x
-                    dy = next_cell[1] - uav.y
-                    if dx != 0 or dy != 0:
-                        uav.heading = float(np.degrees(np.arctan2(dy, dx)) % 360)
-
-                    uav.x, uav.y = next_cell
-                    self.explored_grid[next_cell[0], next_cell[1]] = 1
-
-                    if uav.status not in (UAVStatus.RETURNING,):
-                        uav.status = UAVStatus.MOVING
-
-                # Path finished → handle based on who issued the command
-                if not uav.path:
-                    if uav.status == UAVStatus.RETURNING:
-                        if (uav.x, uav.y) == base:
-                            uav.status = UAVStatus.CHARGING
-                            uav.command_source = "autopilot"
-                            events.append(f"{uav.id} arrived at base")
-                        else:
-                            # Path exhausted before reaching base — recompute
-                            new_path = self.path_planner.find_path((uav.x, uav.y), base)
-                            uav.path = new_path[1:] if new_path and len(new_path) > 1 else []
-                            uav.command_source = "autopilot"
-                    elif uav.command_source == "agent":
-                        # Agent path complete: don't auto-scan, let agent decide
-                        uav.status = UAVStatus.IDLE
-                        uav._idle_since_tick = self.tick
-                        events.append(
-                            f"{uav.id} arrived at waypoint ({uav.x},{uav.y})"
-                        )
-                    else:
-                        # Autopilot path: auto-scan as before
-                        uav.status = UAVStatus.SCANNING
-                        scan = self.scan_zone(uav.id)
-                        uav.status = UAVStatus.IDLE
-                        uav.command_source = "autopilot"
-                        if scan.found_objectives:
-                            for obj_id in scan.found_objectives:
-                                self.objective_field.claim_objective(obj_id, uav.id)
-                            events.append(
-                                f"{uav.id} found {scan.found_objectives} at ({uav.x},{uav.y})"
-                            )
-                continue
-
-            # ── Agent idle timeout: release control after N ticks ──
-            if (uav.status == UAVStatus.IDLE and not uav.path
-                    and uav.command_source == "agent"):
-                idle_since = getattr(uav, "_idle_since_tick", 0)
-                if self.tick - idle_since >= self.AGENT_IDLE_TIMEOUT:
-                    uav.command_source = "autopilot"
-                    events.append(f"{uav.id} agent idle timeout → autopilot")
-
-            # ── Idle + no path → pick a new target (autopilot-controlled only) ──
-            if uav.status == UAVStatus.IDLE and not uav.path and uav.command_source != "agent":
-                target = self._pick_target(uav)
-                if target:
-                    path = self.path_planner.find_path((uav.x, uav.y), target)
-                    if path and len(path) >= 2:
-                        uav.path = path[1:]
-                        uav.status = UAVStatus.MOVING
-                        uav.sector_id = f"→({target[0]},{target[1]})"
-
-        return events
-
-    def _occupied_cells(self, exclude_id: str | None = None) -> set[tuple[int, int]]:
-        """Set of cells occupied by operational UAVs (excluding base and *exclude_id*)."""
-        base = self.terrain.base_position
-        occupied: set[tuple[int, int]] = set()
-        for other in self.fleet.values():
-            if other.id == exclude_id or not other.is_operational:
-                continue
-            pos = (other.x, other.y)
-            if pos != base:
-                occupied.add(pos)
-        return occupied
-
-    def _pick_target(self, uav: UAV) -> tuple[int, int] | None:
-        """Choose a search target with adaptive spread and power budgeting.
-
-        Scoring: probability-weighted, distance-penalised, repulsion from
-        other UAVs using inverse-square decay scaled by fleet density.
-        Power budget adapts to mission progress (more aggressive when
-        coverage is high and fewer cells remain).
-        """
-        # Build set of cells other UAVs are heading to or occupying
-        claimed: set[tuple[int, int]] = set()
-        for other in self.fleet.values():
-            if other.id != uav.id and other.path:
-                last = other.path[-1]
-                claimed.add(last if isinstance(last, tuple) else tuple(last))
-            if other.id != uav.id and other.is_operational:
-                claimed.add((other.x, other.y))
-
-        # Get unexplored passable cells
-        mask = (self.explored_grid == 0) & (~self.terrain.obstacle_grid)
-        candidates = np.argwhere(mask)
-        if len(candidates) == 0:
-            return None
-
-        # ── Adaptive power budget ──
-        # Early mission (low coverage): conservative 40% outbound
-        # Late mission (high coverage): aggressive 55% to reach remaining cells
-        base = self.terrain.base_position
-        coverage = float(np.sum(self.explored_grid)) / (self.size * self.size)
-        budget_ratio = 0.40 + 0.15 * coverage  # 0.40 → 0.55
-        max_one_way = int((uav.power * budget_ratio) / uav.POWER_MOVE)
-
-        # Filter by power budget and distance
-        dists = np.abs(candidates[:, 0] - uav.x) + np.abs(candidates[:, 1] - uav.y)
-        reachable = dists <= max_one_way
-        candidates = candidates[reachable]
-        dists = dists[reachable]
-
-        if len(candidates) == 0:
-            return None
-
-        # ── Scoring ──
-        probs = self.objective_field.prob_matrix[candidates[:, 0], candidates[:, 1]]
-        dists_f = np.maximum(dists.astype(float), 1.0)
-
-        # Repulsion: inverse-square decay, scaled by fleet density
-        #   fleet_density = num_active_uavs / grid_area
-        #   More UAVs → stronger repulsion to encourage spread
-        num_active = sum(1 for u in self.fleet.values() if u.is_operational)
-        repulsion_weight = 0.15 * num_active / max(len(self.fleet), 1)
-
-        repulsion = np.zeros(len(candidates))
-        for cx, cy in claimed:
-            d = np.abs(candidates[:, 0] - cx) + np.abs(candidates[:, 1] - cy)
-            repulsion += 1.0 / (d.astype(float) ** 2 + 1.0)  # inverse-square
-
-        scores = (probs + 0.1) / np.sqrt(dists_f) - repulsion * repulsion_weight
-
-        best_idx = int(np.argmax(scores))
-        return (int(candidates[best_idx][0]), int(candidates[best_idx][1]))
 
     # ─── State Snapshot ─────────────────────────────────────────
 

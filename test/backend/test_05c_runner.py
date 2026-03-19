@@ -70,10 +70,13 @@ class TestTryStart:
 class TestRunCycleErrors:
     @pytest.fixture(autouse=True)
     def clear_api_key(self):
-        old = os.environ.pop("GOOGLE_API_KEY", None)
+        old_key = os.environ.pop("GOOGLE_API_KEY", None)
+        old_vertex = os.environ.pop("GOOGLE_GENAI_USE_VERTEXAI", None)
         yield
-        if old:
-            os.environ["GOOGLE_API_KEY"] = old
+        if old_key:
+            os.environ["GOOGLE_API_KEY"] = old_key
+        if old_vertex:
+            os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = old_vertex
 
     def test_missing_api_key_broadcasts_error(self, runner, broadcasts):
         runner._running = True

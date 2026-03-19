@@ -59,9 +59,9 @@ class TestRepulsionAdaptive:
         world.move_uav(ids[0], 5, 5)
         world.move_uav(ids[1], 3, 3)
 
-        # UAV at base picks a target
-        uav = world.fleet[ids[2]]
-        target = world._pick_target(uav)
+        # Drone at base picks a target
+        drone = world.drones[ids[2]]
+        target = drone._pick_target(world)
         if target is not None:
             occupied = {(world.fleet[i].x, world.fleet[i].y) for i in ids[:2]}
             assert target not in occupied, (
@@ -71,18 +71,15 @@ class TestRepulsionAdaptive:
     def test_repulsion_uses_inverse_square(self):
         """Repulsion should decay as 1/d² not 1/(d+1) for more physical spread."""
         world = GridWorld(size=10, num_uavs=3, num_objectives=3, num_obstacles=3, seed=42)
-        # If the method exists and works, we verify the scoring doesn't
-        # cluster targets near each other
         ids = list(world.fleet.keys())
         world.move_uav(ids[0], 5, 0)
         world.move_uav(ids[1], 5, 1)
 
-        # UAV 2 at (0,0) should NOT pick a target near (5,0)/(5,1)
-        uav = world.fleet[ids[2]]
-        target = world._pick_target(uav)
+        # Drone 2 at (0,0) should NOT pick a target near (5,0)/(5,1)
+        drone = world.drones[ids[2]]
+        target = drone._pick_target(world)
         if target is not None:
             dist_to_cluster = abs(target[0] - 5) + abs(target[1] - 0)
-            # Should prefer targets away from the cluster
             assert dist_to_cluster >= 2, (
                 f"Target {target} is too close to UAV cluster at (5,0)/(5,1)"
             )
@@ -164,13 +161,13 @@ class TestAdaptivePowerBudget:
     def test_early_mission_conservative(self):
         """Early in mission (low coverage), budget should be conservative."""
         world = GridWorld(size=10, num_uavs=2, num_objectives=2, num_obstacles=3, seed=42)
-        uav = list(world.fleet.values())[0]
-        uav.power = 80.0
+        drone = list(world.drones.values())[0]
+        drone.uav.power = 80.0
 
-        target = world._pick_target(uav)
+        target = drone._pick_target(world)
         if target:
-            dist = abs(target[0] - uav.x) + abs(target[1] - uav.y)
-            max_range = uav.power / uav.POWER_MOVE
+            dist = abs(target[0] - drone.uav.x) + abs(target[1] - drone.uav.y)
+            max_range = drone.uav.power / drone.uav.POWER_MOVE
             # Should not use more than ~50% of power
             assert dist <= max_range * 0.6, (
                 f"Early mission: target at dist {dist} exceeds safe range {max_range * 0.6}"
@@ -186,14 +183,13 @@ class TestAdaptivePowerBudget:
             for y in range(8):
                 world.explored_grid[x, y] = 1
 
-        uav = list(world.fleet.values())[0]
-        uav.power = 80.0
-        target = world._pick_target(uav)
+        drone = list(world.drones.values())[0]
+        drone.uav.power = 80.0
+        target = drone._pick_target(world)
 
         # With high coverage, remaining targets may be far — budget should allow
-        # This test verifies the budget doesn't prevent reaching remaining cells
         if target:
-            dist = abs(target[0] - uav.x) + abs(target[1] - uav.y)
+            dist = abs(target[0] - drone.uav.x) + abs(target[1] - drone.uav.y)
             assert dist > 0, "Should still find unexplored targets"
 
 
@@ -269,20 +265,17 @@ class TestMoveUavInfrastructure:
 
     def test_not_in_mcp_tools(self):
         """move_uav must not appear in MCP tool names."""
-        from backend.agents.tools import make_tools
-        world = GridWorld(size=10, num_uavs=2, num_objectives=2, num_obstacles=3, seed=42)
-        tool_names = {fn.__name__ for fn in make_tools(world)}
-        assert "move_uav" not in tool_names
+        from backend.services.tool_server import mcp
+        import asyncio
+        from fastmcp import Client
 
-    def test_not_in_navigate_to(self):
-        """navigate_to tool must call set_waypoint, not move_uav."""
-        import inspect
-        from backend.agents.tools import make_tools
-        world = GridWorld(size=10, num_uavs=2, num_objectives=2, num_obstacles=3, seed=42)
-        tools = {fn.__name__: fn for fn in make_tools(world)}
-        src = inspect.getsource(tools["navigate_to"])
-        assert "set_waypoint" in src, "navigate_to must use set_waypoint"
-        assert "move_uav" not in src, "navigate_to must NOT use move_uav"
+        async def _check():
+            async with Client(mcp) as client:
+                tools = await client.list_tools()
+                return {t.name for t in tools}
+
+        tool_names = asyncio.get_event_loop().run_until_complete(_check())
+        assert "move_uav" not in tool_names
 
     def test_still_works_for_tests(self):
         """move_uav must still function as test infrastructure."""

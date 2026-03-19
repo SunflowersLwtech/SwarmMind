@@ -14,6 +14,29 @@ class UAVStatus(str, Enum):
     OFFLINE = "offline"
 
 
+# ─── Mission Models ─────────────────────────────────────────────
+
+class MissionType(str, Enum):
+    SEARCH = "search"    # fly to target + scan on arrival
+    RECALL = "recall"    # return to base
+    IDLE = "idle"
+
+
+class MissionStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+@dataclass
+class Mission:
+    type: MissionType
+    target: tuple[int, int] | None = None
+    status: MissionStatus = MissionStatus.PENDING
+    assigned_by: str = "autopilot"
+
+
 # Module-level power threshold constant
 LOW_POWER_THRESHOLD = 20.0
 
@@ -37,6 +60,7 @@ class UAV:
     mission_log: list[str] = field(default_factory=list)
     path: list[tuple[int, int]] = field(default_factory=list)  # current movement path
     command_source: str = "autopilot"  # "agent" or "autopilot" — who issued current command
+    _idle_since_tick: int = 0          # tick when UAV became idle (for agent timeout)
 
     # Power consumption constants
     POWER_MOVE: float = 2.0       # per cell
@@ -153,6 +177,18 @@ class RepowerResult(BaseModel):
     old_power: float
     new_power: float
     fully_charged: bool
+
+
+class MissionReport(BaseModel):
+    """Structured drone status returned by Drone.get_report() / assign_mission()."""
+    drone_id: str
+    status: str
+    power: float
+    position: list[int]
+    mission: dict | None = None     # current mission description
+    mission_status: str = "idle"    # idle / executing / completed / returning
+    explorable_cells: int = 0       # cells explorable after reserving return power
+    eta: int = 0                    # ticks until arrival
 
 
 class WaypointResult(BaseModel):

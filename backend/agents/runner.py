@@ -130,11 +130,29 @@ class AgentRunner:
             # Build situational briefing (read-only world access)
             progress = self.world.get_search_progress()
             fleet = self.world.get_fleet_status()
+
+            # Drone summary with positions
+            drone_lines = []
+            for drone in self.world.drones.values():
+                u = drone.uav
+                mission_str = ""
+                if drone.current_mission:
+                    mission_str = f" mission={drone.current_mission.type.value}"
+                    if drone.current_mission.target:
+                        mission_str += f"→{drone.current_mission.target}"
+                drone_lines.append(
+                    f"  {u.id}: {u.status.value} at ({u.x},{u.y}) "
+                    f"power={u.power:.0f}%{mission_str}"
+                )
+
             briefing = (
                 f"Cycle {cycle} | Tick {self.world.tick} | "
+                f"Grid {self.world.size}x{self.world.size} | "
+                f"Base at {list(self.world.base_position)}\n"
                 f"Coverage {progress.coverage_pct:.1f}% | "
                 f"Objectives {progress.objectives_found}/{progress.objectives_total} | "
-                f"Fleet: {fleet.active}/{fleet.total} active, avg power {fleet.avg_power:.0f}%"
+                f"Fleet: {fleet.active}/{fleet.total} active, avg power {fleet.avg_power:.0f}%\n"
+                f"Drones:\n" + "\n".join(drone_lines)
             )
 
             blackbox.log("system", f"Agent cycle {cycle} started: {briefing}")

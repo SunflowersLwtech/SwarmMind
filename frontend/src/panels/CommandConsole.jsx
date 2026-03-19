@@ -21,19 +21,14 @@ const STAGES = {
 }
 
 const MCP_TOOL_DESCRIPTIONS = {
-  query_fleet:                'Read fleet status (all UAVs)',
-  inspect_uav:               'Read single UAV telemetry',
-  get_threat_map:             'Read probability heatmap',
-  get_search_progress:        'Read coverage & objectives',
-  get_situational_awareness:  'Read full situation (composite)',
-  navigate_to:                'COMMAND: Set UAV waypoint',
+  discover_fleet:             'Read all drone status & missions',
+  get_drone_status:           'Read single drone telemetry',
+  assign_search_mission:      'COMMAND: Send drone to target',
+  assign_scan_mission:        'COMMAND: Thermal scan at position',
+  recall_drone:               'COMMAND: Return drone to base',
+  get_situation_overview:      'Read full situation (composite)',
+  get_frontier_targets:        'Read unexplored frontiers',
   plan_route:                 'Evaluate A* route cost',
-  sweep_scan:                 'COMMAND: Thermal scan',
-  detect_frontier:            'Read unexplored frontiers',
-  mark_objective:             'COMMAND: Claim survivor',
-  recall_uav:                 'COMMAND: Return to base',
-  repower_uav:                'COMMAND: Charge UAV',
-  assess_endurance:           'Read fleet power budget',
 }
 
 /* ── Markdown theme ──────────────────────────────────────── */

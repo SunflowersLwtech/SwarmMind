@@ -152,19 +152,6 @@ class TestBuildPipeline:
         assert len(set(toolsets)) == 1, "All agents should share one McpToolset"
 
 
-class TestFunctionToolFallback:
-    """tools.py closures must still work for standalone testing."""
-
-    def test_make_tools_still_works(self):
-        from backend.agents.tools import make_tools
-        from backend.core.grid_world import GridWorld
-        world = GridWorld(size=10, num_uavs=2, num_objectives=2, num_obstacles=3, seed=42)
-        tools = make_tools(world)
-        assert len(tools) == 13
-        result = tools[0]()  # query_fleet
-        assert result["status"] == "ok"
-
-
 class TestPromptsConfig:
     """Prompts should be well-structured."""
 

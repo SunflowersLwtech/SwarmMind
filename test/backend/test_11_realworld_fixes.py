@@ -453,10 +453,10 @@ class TestAdminToolsRemoved:
             tools = await client.list_tools()
             tool_names = {t.name for t in tools}
             expected = {
-                "query_fleet", "inspect_uav", "get_threat_map", "get_search_progress",
-                "navigate_to", "plan_route", "sweep_scan", "detect_frontier",
-                "mark_objective", "recall_uav", "repower_uav", "assess_endurance",
-                "get_situational_awareness",
+                "discover_fleet", "get_drone_status",
+                "assign_search_mission", "assign_scan_mission",
+                "recall_drone", "get_situation_overview",
+                "get_frontier_targets", "plan_route",
             }
             assert expected == tool_names, f"Expected {expected}, got {tool_names}"
 
@@ -465,61 +465,56 @@ class TestAdminToolsRemoved:
 #  Fix 7: MCP Tool — navigate_to Waypoint Behavior
 # ═══════════════════════════════════════════════════════════════
 
-class TestMCPNavigateToWaypoint:
-    """MCP navigate_to tool must use waypoint behavior over the wire."""
+class TestMCPMissionTools:
+    """MCP mission tools must work correctly over the wire."""
 
     @pytest.mark.asyncio
-    async def test_navigate_to_returns_waypoint_result(self):
+    async def test_assign_search_mission_returns_report(self):
         from backend.services import tool_server
         from fastmcp import Client
 
         async with Client(tool_server.mcp) as client:
-            # Get a UAV ID
-            fleet_result = await client.call_tool("query_fleet", {})
+            fleet_result = await client.call_tool("discover_fleet", {})
             fleet_data = json.loads(fleet_result.content[0].text)
-            uav_id = fleet_data["data"]["uavs"][0]["id"]
+            drone_id = fleet_data["data"]["drones"][0]["drone_id"]
 
-            # Navigate to a target — try multiple safe targets in case of obstacles
             for target in [(3, 0), (0, 3), (2, 0), (0, 2)]:
-                result = await client.call_tool("navigate_to", {
-                    "uav_id": uav_id, "x": target[0], "y": target[1],
+                result = await client.call_tool("assign_search_mission", {
+                    "drone_id": drone_id, "x": target[0], "y": target[1],
                 })
                 data = json.loads(result.content[0].text)
                 if data["status"] == "ok":
                     break
 
             assert data["status"] == "ok"
-            assert "estimated_eta" in data["data"]
-            assert "current_position" in data["data"]
-            assert "planned_path" in data["data"]
-            assert data["data"]["estimated_eta"] > 0
+            assert "accepted" in data["data"]["status"]
 
     @pytest.mark.asyncio
-    async def test_recall_uav_returns_waypoint_result(self):
+    async def test_recall_drone_works(self):
         from backend.services import tool_server
         from fastmcp import Client
 
         async with Client(tool_server.mcp) as client:
-            fleet_result = await client.call_tool("query_fleet", {})
+            fleet_result = await client.call_tool("discover_fleet", {})
             fleet_data = json.loads(fleet_result.content[0].text)
-            uav_id = fleet_data["data"]["uavs"][0]["id"]
+            drone_id = fleet_data["data"]["drones"][0]["drone_id"]
 
-            result = await client.call_tool("recall_uav", {"uav_id": uav_id})
+            result = await client.call_tool("recall_drone", {"drone_id": drone_id})
             data = json.loads(result.content[0].text)
-            # UAV at base → still ok but short/zero path
-            assert data["status"] in ("ok", "error")
+            # Drone at base → rejected (can't recall from base)
+            assert data["status"] in ("ok", "rejected")
 
     @pytest.mark.asyncio
-    async def test_situational_awareness_tool_exists(self):
+    async def test_situation_overview_tool_exists(self):
         from backend.services import tool_server
         from fastmcp import Client
 
         async with Client(tool_server.mcp) as client:
             tools = await client.list_tools()
             tool_names = [t.name for t in tools]
-            assert "get_situational_awareness" in tool_names
+            assert "get_situation_overview" in tool_names
 
-            result = await client.call_tool("get_situational_awareness", {})
+            result = await client.call_tool("get_situation_overview", {})
             data = json.loads(result.content[0].text)
             assert data["status"] == "ok"
             assert "fleet" in data["data"]
@@ -614,24 +609,24 @@ class TestUAVCommandSource:
 class TestPromptsUpdated:
     """Prompts must reflect waypoint-based navigation."""
 
-    def test_assessor_mentions_situational_awareness(self):
+    def test_assessor_mentions_situation_overview(self):
         import yaml
         prompts_path = os.path.join(os.path.dirname(__file__), '../../backend/agents/prompts.yaml')
         with open(prompts_path) as f:
             data = yaml.safe_load(f)
         instruction = data["assessor"]["instruction"]
-        assert "get_situational_awareness" in instruction
+        assert "get_situation_overview" in instruction
 
-    def test_dispatcher_mentions_waypoint(self):
+    def test_dispatcher_mentions_assign_search(self):
         import yaml
         prompts_path = os.path.join(os.path.dirname(__file__), '../../backend/agents/prompts.yaml')
         with open(prompts_path) as f:
             data = yaml.safe_load(f)
         instruction = data["dispatcher"]["instruction"]
-        assert "WAYPOINT" in instruction.upper() or "waypoint" in instruction.lower()
+        assert "assign_search_mission" in instruction
 
     def test_dispatcher_warns_about_scan_timing(self):
-        """Dispatcher must warn: don't scan immediately after navigate_to."""
+        """Dispatcher must warn: don't scan immediately after assign_search_mission."""
         import yaml
         prompts_path = os.path.join(os.path.dirname(__file__), '../../backend/agents/prompts.yaml')
         with open(prompts_path) as f:
