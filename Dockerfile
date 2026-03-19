@@ -29,9 +29,5 @@ EXPOSE 10000
 # Start script: write SA credentials from env var, then launch uvicorn
 # Render passes GOOGLE_APPLICATION_CREDENTIALS_JSON as env var;
 # Vertex AI SDK needs it as a file at GOOGLE_APPLICATION_CREDENTIALS path.
-CMD sh -c '\
-  if [ -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then \
-    echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/gcp-sa-key.json; \
-    export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-sa-key.json; \
-  fi; \
-  uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}'
+# Use python to write the file to avoid shell escaping issues with \n in private keys.
+CMD ["sh", "-c", "python -c \"import os; j=os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON',''); open('/tmp/gcp-sa-key.json','w').write(j) if j else None\" && export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-sa-key.json && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
