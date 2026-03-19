@@ -26,6 +26,12 @@ COPY .env.example ./
 
 EXPOSE 10000
 
-# Start: uvicorn serves both the FastAPI backend and static frontend
-# Render uses PORT env var (default 10000)
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}
+# Start script: write SA credentials from env var, then launch uvicorn
+# Render passes GOOGLE_APPLICATION_CREDENTIALS_JSON as env var;
+# Vertex AI SDK needs it as a file at GOOGLE_APPLICATION_CREDENTIALS path.
+CMD sh -c '\
+  if [ -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then \
+    echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/gcp-sa-key.json; \
+    export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-sa-key.json; \
+  fi; \
+  uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}'
