@@ -8,8 +8,9 @@
 import { useEffect } from 'react'
 import useMissionStore from '../stores/missionStore'
 
-// Use same-origin via Vite proxy (avoids cross-port WS issues in browsers)
-const WS_URL = `ws://${window.location.host}/ws/live`
+// Auto-detect ws:// vs wss:// based on page protocol (HTTPS on Render)
+const WS_PROTO = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+const WS_URL = `${WS_PROTO}//${window.location.host}/ws/live`
 const MAX_ATTEMPTS = 10
 
 let ws = null
