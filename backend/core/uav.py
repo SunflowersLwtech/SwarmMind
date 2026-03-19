@@ -36,6 +36,7 @@ class UAV:
     sector_id: str | None = None
     mission_log: list[str] = field(default_factory=list)
     path: list[tuple[int, int]] = field(default_factory=list)  # current movement path
+    command_source: str = "autopilot"  # "agent" or "autopilot" — who issued current command
 
     # Power consumption constants
     POWER_MOVE: float = 2.0       # per cell
@@ -86,6 +87,7 @@ class UAV:
             "comms_range": self.comms_range,
             "sector_id": self.sector_id,
             "is_low_power": self.is_low_power,
+            "command_source": self.command_source,
         }
 
 
@@ -100,6 +102,7 @@ class UAVSummary(BaseModel):
     heading: float
     sector_id: str | None = None
     is_low_power: bool = False
+    command_source: str = "autopilot"
 
 class UAVDetail(BaseModel):
     id: str
@@ -150,3 +153,20 @@ class RepowerResult(BaseModel):
     old_power: float
     new_power: float
     fully_charged: bool
+
+
+class WaypointResult(BaseModel):
+    """Result of setting a navigation waypoint (non-teleporting).
+
+    Industry best practice: command-acknowledgment pattern.
+    The UAV does NOT teleport — it moves 1 cell/tick via autopilot.
+    """
+    uav_id: str
+    waypoint: list[int]           # Target [x, y]
+    current_position: list[int]   # Where UAV is now (unchanged)
+    planned_path: list[list[int]]
+    estimated_distance: int
+    estimated_power_cost: float
+    estimated_eta: int            # Ticks until arrival
+    affordable: bool = True       # Can UAV afford the full trip?
+    status: str = "ok"

@@ -15,13 +15,14 @@ const useMissionStore = create((set, get) => ({
 
   // Mission state
   missionStatus: 'idle',
-  missionTime: 0,
   tick: 0,
   objectivesFound: 0,
   objectivesTotal: 0,
 
   // Agent CoT logs
   agentLogs: [],
+  agentStatus: 'idle',
+  agentCycle: 0,
 
   // Events timeline
   events: [],
@@ -30,27 +31,50 @@ const useMissionStore = create((set, get) => ({
   connected: false,
 
   // Actions
-  updateState: (payload) => set({
-    fleet: payload.fleet || get().fleet,
-    coverage: payload.coverage_pct ?? get().coverage,
-    objectives: payload.objectives || get().objectives,
-    exploredGrid: payload.explored || get().exploredGrid,
-    obstacles: payload.obstacles || get().obstacles,
-    heatmap: payload.heatmap || get().heatmap,
-    hotspots: payload.hotspots || get().hotspots,
-    gridSize: payload.grid_size || get().gridSize,
-    base: payload.base || get().base,
-    sectors: payload.sectors || get().sectors,
-    missionStatus: payload.mission_status || get().missionStatus,
-    tick: payload.tick ?? get().tick,
-    objectivesFound: payload.objectives_found ?? get().objectivesFound,
-    objectivesTotal: payload.objectives_total ?? get().objectivesTotal,
-    events: payload.events || get().events,
+  updateState: (payload) => set(state => {
+    const newEvents = payload.events || state.events
+    let newLogs = []
+    if (newEvents.length > state.events.length) {
+      newLogs = newEvents.slice(state.events.length).map(evt => ({
+        timestamp: Date.now(),
+        action: 'system_event',
+        agent: 'SYS',
+        detail: evt
+      }))
+    }
+
+    return {
+      fleet: payload.fleet || state.fleet,
+      coverage: payload.coverage_pct ?? state.coverage,
+      objectives: payload.objectives || state.objectives,
+      exploredGrid: payload.explored || state.exploredGrid,
+      obstacles: payload.obstacles || state.obstacles,
+      heatmap: payload.heatmap || state.heatmap,
+      hotspots: payload.hotspots || state.hotspots,
+      gridSize: payload.grid_size || state.gridSize,
+      base: payload.base || state.base,
+      sectors: payload.sectors || state.sectors,
+      missionStatus: payload.mission_status || state.missionStatus,
+      tick: payload.tick ?? state.tick,
+      objectivesFound: payload.objectives_found ?? state.objectivesFound,
+      objectivesTotal: payload.objectives_total ?? state.objectivesTotal,
+      events: newEvents,
+      agentLogs: newLogs.length > 0 ? [...state.agentLogs.slice(-(99 - newLogs.length)), ...newLogs] : state.agentLogs,
+    }
   }),
 
-  addLog: (log) => set(state => ({
-    agentLogs: [...state.agentLogs.slice(-99), log],
-  })),
+  addLog: (log) => set(state => {
+    // Deduplicate/Update: if last log has same timestamp+action+agent, update it (for streaming text)
+    const last = state.agentLogs[state.agentLogs.length - 1]
+    if (last && last.timestamp === log.timestamp && last.action === log.action && last.agent === log.agent) {
+      const updated = [...state.agentLogs]
+      updated[updated.length - 1] = log
+      return { agentLogs: updated }
+    }
+    return { agentLogs: [...state.agentLogs.slice(-99), log] }
+  }),
+
+  setAgentStatus: (status, cycle) => set({ agentStatus: status, agentCycle: cycle }),
 
   addEvent: (event) => set(state => ({
     events: [...state.events.slice(-49), event],
@@ -70,6 +94,8 @@ const useMissionStore = create((set, get) => ({
     objectivesFound: 0,
     objectivesTotal: 0,
     agentLogs: [],
+    agentStatus: 'idle',
+    agentCycle: 0,
     events: [],
   }),
 }))

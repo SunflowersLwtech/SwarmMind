@@ -6,17 +6,36 @@ import useMissionStore from '../stores/missionStore'
 export default function CoverageOverlay() {
   const meshRef = useRef()
   const gridSize = useMissionStore(state => state.gridSize)
+  const lastTickRef = useRef(-1)
 
   const cellGeo = useMemo(() => new THREE.PlaneGeometry(0.92, 0.92), [])
-
-  // Use a single instanced mesh for all cells
   const maxCells = gridSize * gridSize
   const dummy = useMemo(() => new THREE.Object3D(), [])
-  const colors = useMemo(() => new Float32Array(maxCells * 3), [maxCells])
+
+  // Pre-allocate color buffer once — reuse across frames
+  const colorArr = useMemo(() => new Float32Array(maxCells * 3), [maxCells])
+  const colorAttr = useMemo(() => {
+    const attr = new THREE.InstancedBufferAttribute(colorArr, 3)
+    attr.setUsage(THREE.DynamicDrawUsage)
+    return attr
+  }, [colorArr])
+
+  // Set instance color once on mount
+  const initRef = useRef(false)
 
   useFrame(() => {
-    const { exploredGrid, heatmap, obstacles } = useMissionStore.getState()
+    const { exploredGrid, heatmap, obstacles, tick } = useMissionStore.getState()
     if (!meshRef.current) return
+
+    // Attach color attribute once
+    if (!initRef.current) {
+      meshRef.current.instanceColor = colorAttr
+      initRef.current = true
+    }
+
+    // Only update when tick changes (state_update arrived)
+    if (tick === lastTickRef.current) return
+    lastTickRef.current = tick
 
     const exploredSet = new Set(exploredGrid.map(([x, y]) => `${x},${y}`))
     const obstacleSet = new Set(obstacles.map(([x, y]) => `${x},${y}`))
@@ -31,27 +50,23 @@ export default function CoverageOverlay() {
         meshRef.current.setMatrixAt(idx, dummy.matrix)
 
         if (obstacleSet.has(key)) {
-          colors[idx * 3] = 0.15
-          colors[idx * 3 + 1] = 0.08
-          colors[idx * 3 + 2] = 0.08
+          colorArr[idx * 3] = 0.15
+          colorArr[idx * 3 + 1] = 0.08
+          colorArr[idx * 3 + 2] = 0.08
         } else if (exploredSet.has(key)) {
-          // Explored = green tint
-          colors[idx * 3] = 0.02
-          colors[idx * 3 + 1] = 0.15
-          colors[idx * 3 + 2] = 0.08
+          colorArr[idx * 3] = 0.02
+          colorArr[idx * 3 + 1] = 0.15
+          colorArr[idx * 3 + 2] = 0.08
         } else {
-          // Unexplored = show heatmap probability
           const prob = (heatmap && heatmap[x] && heatmap[x][y]) || 0
           if (prob > 0.3) {
-            // High probability = warm
-            colors[idx * 3] = prob * 0.8
-            colors[idx * 3 + 1] = prob * 0.2
-            colors[idx * 3 + 2] = 0.05
+            colorArr[idx * 3] = prob * 0.8
+            colorArr[idx * 3 + 1] = prob * 0.2
+            colorArr[idx * 3 + 2] = 0.05
           } else {
-            // Low probability = dim
-            colors[idx * 3] = 0.04
-            colors[idx * 3 + 1] = 0.06
-            colors[idx * 3 + 2] = 0.1
+            colorArr[idx * 3] = 0.04
+            colorArr[idx * 3 + 1] = 0.06
+            colorArr[idx * 3 + 2] = 0.1
           }
         }
         idx++
@@ -59,8 +74,7 @@ export default function CoverageOverlay() {
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true
-    meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colors, 3)
-    meshRef.current.instanceColor.needsUpdate = true
+    colorAttr.needsUpdate = true
   })
 
   return (

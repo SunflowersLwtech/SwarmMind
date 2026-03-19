@@ -1,14 +1,11 @@
 """SwarmMind ADK Commander — 4-stage sequential agent pipeline.
 
-Uses Google ADK with McpToolset connecting to the MCP tool server
-via Streamable HTTP transport.
+Architecture (competition-compliant):
+    Agent (Gemini) ──MCP Protocol──▶ MCP Server (port 8001) ──▶ shared GridWorld
 
-Key constraints (from CRITICAL_ISSUES.md):
-- Use McpToolset (not MCPToolset — deprecated)
-- Use StreamableHTTPConnectionParams (not SSE — deprecated)
-- Set timeout=30 (default 5s is too short)
-- Use gemini-2.5-flash (not flash-lite — 50% empty response bug)
-- Do NOT use streaming with tools (Gemini 3 bug)
+All agent ↔ drone communication goes through MCP protocol (mandatory).
+The agent discovers available drones and tools at runtime via MCP tool
+discovery — no hard-coded drone IDs, satisfying Case Study 3 §4.
 """
 from __future__ import annotations
 
@@ -26,66 +23,54 @@ _prompts_path = Path(__file__).parent / "prompts.yaml"
 with open(_prompts_path) as f:
     PROMPTS = yaml.safe_load(f)
 
-
-# ─── MCP Toolset ────────────────────────────────────────────────
-
-_conn_params = StreamableHTTPConnectionParams(
-    url="http://127.0.0.1:8001/mcp",
-    timeout=30,
-)
-
-fleet_tools = McpToolset(connection_params=_conn_params)
-fleet_tools.connection_params = _conn_params  # expose for tests
-
-# ─── Agent Model ────────────────────────────────────────────────
+# ─── Configuration ─────────────────────────────────────────────
 # gemini-2.5-flash is stable for agent loops.
 # Do NOT use gemini-3.1-flash-lite — 50% empty response bug (Issue #3525).
 AGENT_MODEL = "gemini-2.5-flash"
+MCP_URL = "http://127.0.0.1:8001/mcp"
+MCP_TIMEOUT = 30
 
 
-# ─── Stage 1: Assessor ─────────────────────────────────────────
+# ─── Pipeline Factory ─────────────────────────────────────────
 
-assess_agent = LlmAgent(
-    name="assessor",
-    model=AGENT_MODEL,
-    instruction=PROMPTS["assessor"]["instruction"],
-    tools=[fleet_tools],
-    output_key="assessment",
-)
+def build_pipeline(mcp_url: str = MCP_URL) -> SequentialAgent:
+    """Create a 4-stage sequential agent connected to fleet via MCP.
 
-# ─── Stage 2: Strategist ───────────────────────────────────────
+    The agent discovers drone tools at runtime through MCP protocol,
+    enabling dynamic fleet adaptation without hard-coded drone IDs.
+    McpToolset stores connection params at creation time; the actual
+    MCP session is established lazily when Runner executes tools.
+    """
+    conn = StreamableHTTPConnectionParams(url=mcp_url, timeout=MCP_TIMEOUT)
+    fleet_tools = McpToolset(connection_params=conn)
 
-plan_agent = LlmAgent(
-    name="strategist",
-    model=AGENT_MODEL,
-    instruction=PROMPTS["strategist"]["instruction"],
-    tools=[fleet_tools],
-    output_key="strategy",
-)
+    assess_agent = LlmAgent(
+        name="assessor", model=AGENT_MODEL,
+        instruction=PROMPTS["assessor"]["instruction"],
+        tools=[fleet_tools], output_key="assessment",
+    )
+    plan_agent = LlmAgent(
+        name="strategist", model=AGENT_MODEL,
+        instruction=PROMPTS["strategist"]["instruction"],
+        tools=[fleet_tools], output_key="strategy",
+    )
+    execute_agent = LlmAgent(
+        name="dispatcher", model=AGENT_MODEL,
+        instruction=PROMPTS["dispatcher"]["instruction"],
+        tools=[fleet_tools], output_key="execution_log",
+    )
+    report_agent = LlmAgent(
+        name="analyst", model=AGENT_MODEL,
+        instruction=PROMPTS["analyst"]["instruction"],
+        tools=[fleet_tools], output_key="report",
+    )
 
-# ─── Stage 3: Dispatcher ───────────────────────────────────────
+    return SequentialAgent(
+        name="swarm_commander",
+        sub_agents=[assess_agent, plan_agent, execute_agent, report_agent],
+    )
 
-execute_agent = LlmAgent(
-    name="dispatcher",
-    model=AGENT_MODEL,
-    instruction=PROMPTS["dispatcher"]["instruction"],
-    tools=[fleet_tools],
-    output_key="execution_log",
-)
 
-# ─── Stage 4: Analyst ──────────────────────────────────────────
-
-report_agent = LlmAgent(
-    name="analyst",
-    model=AGENT_MODEL,
-    instruction=PROMPTS["analyst"]["instruction"],
-    tools=[fleet_tools],
-    output_key="report",
-)
-
-# ─── Root Agent: Sequential Pipeline ───────────────────────────
-
-root_agent = SequentialAgent(
-    name="swarm_commander",
-    sub_agents=[assess_agent, plan_agent, execute_agent, report_agent],
-)
+# ─── Backward compat: root_agent for `adk web` ────────────────
+# Requires MCP server running:  python -m backend.services.tool_server
+root_agent = build_pipeline()

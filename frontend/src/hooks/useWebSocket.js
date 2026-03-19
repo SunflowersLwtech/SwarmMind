@@ -1,66 +1,91 @@
-import { useEffect, useRef, useCallback } from 'react'
+/**
+ * Module-level WebSocket singleton — immune to React StrictMode.
+ *
+ * The connection lives at module scope, completely outside React lifecycle.
+ * Components call useWebSocket() to get sendCommand; the hook only
+ * subscribes/unsubscribes (cheap & idempotent), never owns the socket.
+ */
+import { useEffect } from 'react'
 import useMissionStore from '../stores/missionStore'
 
-const WS_URL = `ws://${window.location.hostname}:8000/ws/live`
+// Use same-origin via Vite proxy (avoids cross-port WS issues in browsers)
+const WS_URL = `ws://${window.location.host}/ws/live`
+const MAX_ATTEMPTS = 10
 
+let ws = null
+let attempt = 0
+let timer = null
+
+function handleMessage(event) {
+  try {
+    const msg = JSON.parse(event.data)
+    const store = useMissionStore.getState()
+    if (msg.type === 'state_update' || msg.type === 'initial_state') {
+      store.updateState(msg.payload)
+    } else if (msg.type === 'agent_log') {
+      store.addLog(msg.payload)
+    } else if (msg.type === 'agent_status') {
+      store.setAgentStatus(msg.payload.status, msg.payload.cycle)
+    }
+  } catch (e) {
+    console.error('[WS] Parse error:', e)
+  }
+}
+
+function connect() {
+  if (ws && ws.readyState !== WebSocket.CLOSED) return
+
+  ws = new WebSocket(WS_URL)
+
+  ws.onopen = () => {
+    useMissionStore.getState().setConnected(true)
+    attempt = 0
+    console.log('[WS] Connected')
+  }
+
+  ws.onmessage = handleMessage
+
+  ws.onerror = (err) => {
+    console.error('[WS] Connection error:', err)
+  }
+
+  ws.onclose = () => {
+    useMissionStore.getState().setConnected(false)
+    ws = null
+    if (attempt < MAX_ATTEMPTS) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
+      attempt += 1
+      console.log(`[WS] Reconnecting in ${delay}ms (attempt ${attempt})`)
+      timer = setTimeout(connect, delay)
+    }
+  }
+}
+
+/** Send a command via WebSocket. Returns true if sent. */
+export function sendCommand(type, payload) {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type, payload }))
+    return true
+  }
+  return false
+}
+
+// Defer first connection to avoid racing with Vite proxy startup
+setTimeout(connect, 100)
+
+/**
+ * React hook — ensures reconnection if module was loaded before
+ * the backend was ready. Components use this for sendCommand access.
+ */
 export default function useWebSocket() {
-  const wsRef = useRef(null)
-  const attemptRef = useRef(0)
-  const timerRef = useRef(null)
-  const intentionalRef = useRef(false)
-
-  const connect = useCallback(() => {
-    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) return
-
-    const ws = new WebSocket(WS_URL)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      useMissionStore.getState().setConnected(true)
-      attemptRef.current = 0
-      console.log('[WS] Connected')
-    }
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data)
-        if (msg.type === 'state_update' || msg.type === 'initial_state') {
-          useMissionStore.getState().updateState(msg.payload)
-        }
-      } catch (e) {
-        console.error('[WS] Parse error:', e)
-      }
-    }
-
-    ws.onerror = () => {}
-
-    ws.onclose = () => {
-      useMissionStore.getState().setConnected(false)
-      wsRef.current = null
-
-      if (!intentionalRef.current && attemptRef.current < 10) {
-        const delay = Math.min(1000 * Math.pow(2, attemptRef.current), 30000)
-        attemptRef.current += 1
-        console.log(`[WS] Reconnecting in ${delay}ms (attempt ${attemptRef.current})`)
-        timerRef.current = setTimeout(connect, delay)
-      }
-    }
-  }, [])
-
   useEffect(() => {
-    intentionalRef.current = false
-    connect()
-    return () => {
-      intentionalRef.current = true
-      clearTimeout(timerRef.current)
-      if (wsRef.current) wsRef.current.close(1000)
+    // If not connected, kick off a reconnect
+    if (!ws || ws.readyState === WebSocket.CLOSED) {
+      attempt = 0
+      clearTimeout(timer)
+      connect()
     }
-  }, [connect])
-
-  const sendCommand = useCallback((type, payload) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, payload }))
-    }
+    // No cleanup needed — singleton lives for page lifetime
   }, [])
 
   return { sendCommand }

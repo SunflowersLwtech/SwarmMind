@@ -36,9 +36,9 @@ def grid_world():
 
 @pytest.fixture
 def small_world():
-    """A minimal 10x10 world for fast tests."""
+    """A minimal 10x10 world for fast tests (seeded for determinism)."""
     from backend.core.grid_world import GridWorld
-    world = GridWorld(size=10, num_uavs=3, num_objectives=3, num_obstacles=5)
+    world = GridWorld(size=10, num_uavs=3, num_objectives=3, num_obstacles=5, seed=42)
     return world
 
 

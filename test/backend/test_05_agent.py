@@ -1,7 +1,7 @@
 """
-Test Suite 05: Google ADK Agent
-Tests that the agent is correctly configured and can execute missions.
-NOTE: Requires GOOGLE_API_KEY to be set. Tests will skip if not available.
+Test Suite 05: Google ADK Agent — Structure & MCP Compliance
+Tests that the agent pipeline is correctly configured with McpToolset
+and satisfies Case Study 3 mandatory MCP protocol requirements.
 """
 import pytest
 import sys, os
@@ -26,7 +26,7 @@ class TestAgentStructure:
         from backend.agents import root_agent
         assert hasattr(root_agent, 'name')
         assert isinstance(root_agent.name, str)
-        assert len(root_agent.name) > 0
+        assert root_agent.name == "swarm_commander"
 
     def test_root_agent_has_sub_agents(self):
         """Root agent must be a SequentialAgent with sub-agents."""
@@ -37,17 +37,20 @@ class TestAgentStructure:
     def test_pipeline_has_4_stages(self):
         """Must have Assess, Plan, Execute, Report stages."""
         from backend.agents import root_agent
-        sub_agents = root_agent.sub_agents
-        assert len(sub_agents) >= 3, f"Expected >=3 pipeline stages, got {len(sub_agents)}"
+        assert len(root_agent.sub_agents) == 4
+
+    def test_stage_names(self):
+        """Pipeline stages must have expected names."""
+        from backend.agents import root_agent
+        names = [a.name for a in root_agent.sub_agents]
+        assert names == ["assessor", "strategist", "dispatcher", "analyst"]
 
     def test_sub_agents_have_tools(self):
-        """At least one sub-agent must have MCP tools configured."""
+        """Each sub-agent must have MCP tools configured."""
         from backend.agents import root_agent
-        has_tools = any(
-            hasattr(agent, 'tools') and len(agent.tools) > 0
-            for agent in root_agent.sub_agents
-        )
-        assert has_tools, "At least one sub-agent must have tools (McpToolset)"
+        for agent in root_agent.sub_agents:
+            assert hasattr(agent, 'tools') and len(agent.tools) > 0, \
+                f"Agent '{agent.name}' has no tools"
 
     def test_sub_agents_have_instructions(self):
         """Each sub-agent must have a non-empty instruction."""
@@ -60,12 +63,12 @@ class TestAgentStructure:
     def test_sub_agents_use_output_key(self):
         """Sub-agents should use output_key for data flow between stages."""
         from backend.agents import root_agent
-        agents_with_output_key = [
-            a for a in root_agent.sub_agents
-            if hasattr(a, 'output_key') and a.output_key
-        ]
-        assert len(agents_with_output_key) >= 2, \
-            "At least 2 sub-agents should use output_key for pipeline data flow"
+        keys = [a.output_key for a in root_agent.sub_agents if hasattr(a, 'output_key')]
+        assert len(keys) >= 4
+        assert "assessment" in keys
+        assert "strategy" in keys
+        assert "execution_log" in keys
+        assert "report" in keys
 
 
 class TestAgentModel:
@@ -82,41 +85,84 @@ class TestAgentModel:
         """Must NOT use flash-lite for tool-calling agents (50% empty response bug)."""
         from backend.agents import root_agent
         for agent in root_agent.sub_agents:
-            if hasattr(agent, 'tools') and agent.tools and hasattr(agent, 'model') and agent.model:
+            if hasattr(agent, 'model') and agent.model:
                 assert 'lite' not in agent.model.lower(), \
-                    f"Agent '{agent.name}' uses flash-lite with tools — known 50% failure rate!"
+                    f"Agent '{agent.name}' uses flash-lite — known 50% failure rate!"
 
 
-class TestMCPToolsetConfig:
-    """McpToolset must be correctly configured."""
+class TestMCPCompliance:
+    """Case Study 3 §4: All agent ↔ drone communication must use MCP."""
 
-    def test_mcp_toolset_configured(self):
-        """At least one agent must use McpToolset."""
-        from backend.agents import root_agent
-        from google.adk.tools.mcp_tool import McpToolset
-
-        found = False
-        for agent in root_agent.sub_agents:
-            if hasattr(agent, 'tools'):
-                for tool in agent.tools:
-                    if isinstance(tool, McpToolset):
-                        found = True
-                        break
-        assert found, "No McpToolset found in any sub-agent's tools"
-
-    def test_mcp_timeout_not_default(self):
-        """McpToolset timeout must be explicitly set (default 5s is too short)."""
+    def test_uses_mcp_toolset(self):
+        """Each sub-agent must use McpToolset (not direct FunctionTool)."""
         from backend.agents import root_agent
         from google.adk.tools.mcp_tool import McpToolset
 
         for agent in root_agent.sub_agents:
-            if hasattr(agent, 'tools'):
-                for tool in agent.tools:
-                    if isinstance(tool, McpToolset):
-                        params = tool.connection_params
-                        if hasattr(params, 'timeout'):
-                            assert params.timeout >= 10, \
-                                f"McpToolset timeout is {params.timeout}s — too short. Set >= 10s"
+            has_mcp = any(isinstance(t, McpToolset) for t in agent.tools)
+            assert has_mcp, \
+                f"Agent '{agent.name}' must use McpToolset, not direct function calls"
+
+    def test_mcp_url_points_to_fleet_server(self):
+        """MCP URL must point to the fleet tool server."""
+        from backend.agents.commander import MCP_URL
+        assert "8001" in MCP_URL, "MCP must connect to port 8001"
+        assert "/mcp" in MCP_URL, "MCP endpoint must be /mcp"
+
+    def test_mcp_timeout_adequate(self):
+        """MCP timeout must be >= 10s (default 5s is too short for tool chains)."""
+        from backend.agents.commander import MCP_TIMEOUT
+        assert MCP_TIMEOUT >= 10, f"MCP timeout is {MCP_TIMEOUT}s — too short"
+
+    def test_no_hardcoded_drone_ids_in_commander(self):
+        """Commander must not hard-code drone IDs (Case Study 3 §3)."""
+        import inspect
+        from backend.agents import commander
+        source = inspect.getsource(commander)
+        for callsign in ["Alpha", "Bravo", "Charlie", "Delta", "Echo"]:
+            assert callsign not in source, \
+                f"commander.py contains hard-coded drone ID '{callsign}'"
+
+
+class TestBuildPipeline:
+    """build_pipeline factory must create valid MCP-connected pipelines."""
+
+    def test_build_pipeline_returns_sequential_agent(self):
+        from backend.agents.commander import build_pipeline
+        pipeline = build_pipeline()
+        assert pipeline.name == "swarm_commander"
+        assert len(pipeline.sub_agents) == 4
+
+    def test_build_pipeline_custom_url(self):
+        from backend.agents.commander import build_pipeline
+        pipeline = build_pipeline(mcp_url="http://localhost:9999/mcp")
+        assert pipeline.name == "swarm_commander"
+
+    def test_build_pipeline_agents_share_toolset(self):
+        """All 4 agents should share the same McpToolset instance."""
+        from backend.agents.commander import build_pipeline
+        from google.adk.tools.mcp_tool import McpToolset
+        pipeline = build_pipeline()
+        toolsets = []
+        for agent in pipeline.sub_agents:
+            for tool in agent.tools:
+                if isinstance(tool, McpToolset):
+                    toolsets.append(id(tool))
+        # All should reference the same McpToolset instance
+        assert len(set(toolsets)) == 1, "All agents should share one McpToolset"
+
+
+class TestFunctionToolFallback:
+    """tools.py closures must still work for standalone testing."""
+
+    def test_make_tools_still_works(self):
+        from backend.agents.tools import make_tools
+        from backend.core.grid_world import GridWorld
+        world = GridWorld(size=10, num_uavs=2, num_objectives=2, num_obstacles=3, seed=42)
+        tools = make_tools(world)
+        assert len(tools) == 13
+        result = tools[0]()  # query_fleet
+        assert result["status"] == "ok"
 
 
 class TestPromptsConfig:
@@ -133,4 +179,13 @@ class TestPromptsConfig:
             with open(prompts_path) as f:
                 data = yaml.safe_load(f)
             assert isinstance(data, dict), "prompts.yaml must be a valid YAML dict"
-            assert len(data) > 0, "prompts.yaml must not be empty"
+            assert len(data) >= 4, "prompts.yaml must have at least 4 agent prompts"
+
+    def test_prompts_have_all_stages(self):
+        import yaml
+        prompts_path = os.path.join(os.path.dirname(__file__), '../../backend/agents/prompts.yaml')
+        with open(prompts_path) as f:
+            data = yaml.safe_load(f)
+        for stage in ["assessor", "strategist", "dispatcher", "analyst"]:
+            assert stage in data, f"Missing prompt for '{stage}'"
+            assert "instruction" in data[stage], f"Missing instruction for '{stage}'"

@@ -89,6 +89,8 @@ frontend/dist/
 playwright-report/
 test-results/
 .cache/
+.playwright-mcp/
+.claude/
 
 .idea/
 .vscode/

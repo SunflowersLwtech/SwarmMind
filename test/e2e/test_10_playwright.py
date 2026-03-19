@@ -24,7 +24,23 @@ try:
 except ImportError:
     HAS_PLAYWRIGHT = False
 
-pytestmark = pytest.mark.skipif(not HAS_PLAYWRIGHT, reason="playwright not installed")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
+
+def _frontend_is_running():
+    """Check if the frontend dev server is reachable."""
+    import urllib.request
+    try:
+        urllib.request.urlopen(FRONTEND_URL, timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+pytestmark = [
+    pytest.mark.skipif(not HAS_PLAYWRIGHT, reason="playwright not installed"),
+    pytest.mark.skipif(not _frontend_is_running(), reason="frontend dev server not running at " + FRONTEND_URL),
+]
 
 
 @pytest.fixture(scope="module")
@@ -43,9 +59,6 @@ def page(browser):
     page.set_viewport_size({"width": 1920, "height": 1080})
     yield page
     page.close()
-
-
-FRONTEND_URL = "http://localhost:5173"
 
 
 class TestPageLoads:
